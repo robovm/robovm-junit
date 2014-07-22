@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,41 +26,39 @@ import java.io.IOException;
  */
 public class ConfigUtils {
 
+        public static Config.Builder createConfig() throws IOException {
+                Config.Builder configBuilder = new Config.Builder();
+                String value;
 
-    public static Config.Builder createConfig() throws IOException {
-        Config.Builder configBuilder = new Config.Builder();
-        String value;
+                if ((value = getSystemProperty(Constant.ROBOVM_CONFIG_FILE)) != null) {
+                        mergeConfigs(configBuilder, value);
+                }
 
-        if ((value = getSystemProperty(Constant.ROBOVM_CONFIG_FILE)) != null) {
-            mergeConfigs(configBuilder,value);
+                return configBuilder;
         }
 
-        return configBuilder;
-    }
+        public static void mergeConfigs(Config.Builder configBuilder, String value) throws IOException {
 
-
-    public static void mergeConfigs(Config.Builder configBuilder, String value) throws IOException {
-
-       configBuilder.read(new File(value));
-    }
-
-    public static String getSystemProperty(String property) {
-        return System.getProperty(property);
-    }
-
-    public static void setSystemProperty(Object objectToSet, String propertyName) {
-
-        String value = getSystemProperty(propertyName);
-        if (value == null) {
-            return;
+                configBuilder.read(new File(value));
         }
 
-        if (objectToSet instanceof String) {
-            objectToSet = getSystemProperty(propertyName);
-        }
-        if (objectToSet instanceof  Integer) {
-            objectToSet = Integer.parseInt(getSystemProperty(propertyName));
+        public static String getSystemProperty(String property) {
+                return System.getProperty(property);
         }
 
-    }
+        public static void setSystemProperty(Object objectToSet, String propertyName) {
+
+                String value = getSystemProperty(propertyName);
+                if (value == null) {
+                        return;
+                }
+
+                if (objectToSet instanceof String) {
+                        objectToSet = getSystemProperty(propertyName);
+                }
+                if (objectToSet instanceof Integer) {
+                        objectToSet = Integer.parseInt(getSystemProperty(propertyName));
+                }
+
+        }
 }

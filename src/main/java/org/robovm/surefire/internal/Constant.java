@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,16 +18,16 @@ package org.robovm.surefire.internal;
 
 public class Constant {
 
-    public static final int TEST_IGNORED=1;
-    public static final int TEST_RUN_STARTED=2;
-    public static final int TEST_RUN_FINISHED=3;
-    public static final int TEST_STARTED=4;
-    public static final int TEST_FINISHED=5;
-    public static final int TEST_FAILURE=6;
-    public static final String SERVER_PORT = "robovm.serverPort";
-    public static final String SERVER_HOST = "robovm.serverIP" ;
-    public static final String MAVEN_REPOSITORY_DIR = "robovm.mavenRepositoryDir";
-    public static final String ROBOVM_CONFIG_FILE = "robovm.configFile";
-    public static final String DEBUG = "robovm.debug";
-    public static final String INSTALL_DIR = "robovm.installDir";
+        public static final int TEST_IGNORED = 1;
+        public static final int TEST_RUN_STARTED = 2;
+        public static final int TEST_RUN_FINISHED = 3;
+        public static final int TEST_STARTED = 4;
+        public static final int TEST_FINISHED = 5;
+        public static final int TEST_FAILURE = 6;
+        public static final String SERVER_PORT = "robovm.serverPort";
+        public static final String SERVER_HOST = "robovm.serverIP";
+        public static final String MAVEN_REPOSITORY_DIR = "robovm.mavenRepositoryDir";
+        public static final String ROBOVM_CONFIG_FILE = "robovm.configFile";
+        public static final String DEBUG = "robovm.debug";
+        public static final String INSTALL_DIR = "robovm.installDir";
 }

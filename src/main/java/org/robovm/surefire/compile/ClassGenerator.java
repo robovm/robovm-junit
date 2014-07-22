@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -34,42 +34,45 @@ import java.util.EnumSet;
  */
 public class ClassGenerator {
 
-    public static void generateSourceForClass(String className, JavaFileObject javaFileObject) {
-        String host = "localhost";
-        String port = "8889";
+        public static void generateSourceForClass(String className, JavaFileObject javaFileObject) {
+                String host = "localhost";
+                String port = "8889";
 
-        ConfigUtils.setSystemProperty(port, Constant.SERVER_PORT);
-        ConfigUtils.setSystemProperty(host, Constant.SERVER_HOST);
+                ConfigUtils.setSystemProperty(port, Constant.SERVER_PORT);
+                ConfigUtils.setSystemProperty(host, Constant.SERVER_HOST);
 
-        try {
+                try {
             /* clean up previous objects */
-            javaFileObject.delete();
-            JavaWriter javaWriter = new JavaWriter(javaFileObject.openWriter());
-            javaWriter.emitPackage("org.robovm.surefire")
-                    .emitImports(RoboTestListener.class)
-                    .emitImports(JUnitCore.class)
-                    .emitImports(IOException.class)
-                    .beginType(getClassName(className) + "Runner", "class", EnumSet.of(Modifier.PUBLIC, Modifier.FINAL), null)
+                        javaFileObject.delete();
+                        JavaWriter javaWriter = new JavaWriter(javaFileObject.openWriter());
+                        javaWriter.emitPackage("org.robovm.surefire")
+                                .emitImports(RoboTestListener.class)
+                                .emitImports(JUnitCore.class)
+                                .emitImports(IOException.class)
+                                .beginType(getClassName(className) + "Runner", "class",
+                                        EnumSet.of(Modifier.PUBLIC, Modifier.FINAL), null)
 
-                    .beginMethod("void", "main", EnumSet.of(Modifier.PUBLIC, Modifier.STATIC),
-                            Arrays.asList("String[]", "args"),
-                            Arrays.asList("IOException"))
-                    .emitStatement("JUnitCore jUnitCore = new JUnitCore()")
-                    .emitStatement("jUnitCore.addListener(new RoboTestListener(null, \"" + host + "\", \"" + port + "\"))")
-                    .emitStatement("jUnitCore.run(" + className + ".class)")
-                    .endMethod()
-                    .endType()
-                    .close();
+                                .beginMethod("void", "main", EnumSet.of(Modifier.PUBLIC, Modifier.STATIC),
+                                        Arrays.asList("String[]", "args"),
+                                        Arrays.asList("IOException"))
+                                .emitStatement("JUnitCore jUnitCore = new JUnitCore()")
+                                .emitStatement(
+                                        "jUnitCore.addListener(new RoboTestListener(null, \"" + host + "\", \"" + port
+                                                + "\"))")
+                                .emitStatement("jUnitCore.run(" + className + ".class)")
+                                .endMethod()
+                                .endType()
+                                .close();
 
-        } catch (IOException e) {
-            e.printStackTrace();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
         }
-    }
 
-    public static String getClassName(String className) {
-        if (className.lastIndexOf(".") != -1) {
-            return className.substring(className.lastIndexOf(".") + 1);
+        public static String getClassName(String className) {
+                if (className.lastIndexOf(".") != -1) {
+                        return className.substring(className.lastIndexOf(".") + 1);
+                }
+                return className;
         }
-        return className;
-    }
 }

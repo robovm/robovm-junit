@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -23,14 +23,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AtomicIntegerTypeAdapter implements JsonSerializer<AtomicInteger>, JsonDeserializer<AtomicInteger> {
 
-    @Override
-    public AtomicInteger deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        int intValue = jsonElement.getAsInt();
-        return new AtomicInteger(intValue);
-    }
+        @Override
+        public AtomicInteger deserialize(JsonElement jsonElement, Type type,
+                JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                int intValue = jsonElement.getAsInt();
+                return new AtomicInteger(intValue);
+        }
 
-    @Override
-    public JsonElement serialize(AtomicInteger atomicInteger, Type type, JsonSerializationContext jsonSerializationContext) {
-        return new JsonPrimitive(atomicInteger.get());
-    }
+        @Override
+        public JsonElement serialize(AtomicInteger atomicInteger, Type type,
+                JsonSerializationContext jsonSerializationContext) {
+                return new JsonPrimitive(atomicInteger.get());
+        }
 }

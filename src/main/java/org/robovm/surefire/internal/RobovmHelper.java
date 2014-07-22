@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,15 +22,14 @@ import org.robovm.compiler.config.Config;
 
 import java.io.File;
 
-
 public class RobovmHelper {
 
-    public static Config.Home findRoboHome() {
-        Config.Home home = new Config.Home(new File ("/Users/ash/Downloads/robovm-0.0.14"));
-        return home;
-    }
+        public static Config.Home findRoboHome() {
+                Config.Home home = new Config.Home(new File("/Users/ash/Downloads/robovm-0.0.14"));
+                return home;
+        }
 
-    protected static VersionRange getRoboVMVersion() {
-        return VersionRange.createFromVersion(Version.getVersion());
-    }
+        protected static VersionRange getRoboVMVersion() {
+                return VersionRange.createFromVersion(Version.getVersion());
+        }
 }

@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,60 +24,58 @@ import java.lang.reflect.Method;
 
 import static org.apache.maven.surefire.util.ReflectionUtils.tryLoadClass;
 
-
 public class RobovmTestChecker implements ScannerFilter {
 
-    private final Class runWith;
-    private final NonAbstractClassFilter nonAbstractClassFilter;
+        private final Class runWith;
+        private final NonAbstractClassFilter nonAbstractClassFilter;
 
-    @Override
-    public boolean accept(Class testClass) {
-        return isValidJunit4Test(testClass);
-    }
-
-    private boolean isValidJunit4Test(Class testClass) {
-        if (!nonAbstractClassFilter.accept(testClass)) {
-            return false;
+        @Override
+        public boolean accept(Class testClass) {
+                return isValidJunit4Test(testClass);
         }
-        if (isRunWithPresentInClassLoader()) {
-            Annotation runWithAnnotation = testClass.getAnnotation(runWith);
-            if (runWithAnnotation != null) {
-                return true;
-            }
-        }
-        return lookForAnnotateMethods(testClass);
-    }
 
-    private boolean lookForAnnotateMethods(Class testClass) {
-        Class classToCheck = testClass;
-        while (classToCheck != null) {
-            if (checkForTestAnnotatedMethod(classToCheck)) {
-                return true;
-            }
-            classToCheck = classToCheck.getSuperclass();
-        }
-        return false;
-    }
-
-    private boolean checkForTestAnnotatedMethod(Class classToCheck) {
-        for (Method m : classToCheck.getDeclaredMethods()) {
-            for (Annotation annotation : m.getAnnotations()) {
-                if (org.junit.Test.class.isAssignableFrom(annotation.annotationType())) {
-                    return true;
+        private boolean isValidJunit4Test(Class testClass) {
+                if (!nonAbstractClassFilter.accept(testClass)) {
+                        return false;
                 }
-            }
+                if (isRunWithPresentInClassLoader()) {
+                        Annotation runWithAnnotation = testClass.getAnnotation(runWith);
+                        if (runWithAnnotation != null) {
+                                return true;
+                        }
+                }
+                return lookForAnnotateMethods(testClass);
         }
-        return false;
-    }
 
-    private boolean isRunWithPresentInClassLoader() {
-        return runWith != null;
-    }
+        private boolean lookForAnnotateMethods(Class testClass) {
+                Class classToCheck = testClass;
+                while (classToCheck != null) {
+                        if (checkForTestAnnotatedMethod(classToCheck)) {
+                                return true;
+                        }
+                        classToCheck = classToCheck.getSuperclass();
+                }
+                return false;
+        }
 
-    public RobovmTestChecker (ClassLoader classLoader) {
-        this.runWith = tryLoadClass(classLoader, org.junit.runner.RunWith.class.getName());
-        this.nonAbstractClassFilter = new NonAbstractClassFilter();
-    }
+        private boolean checkForTestAnnotatedMethod(Class classToCheck) {
+                for (Method m : classToCheck.getDeclaredMethods()) {
+                        for (Annotation annotation : m.getAnnotations()) {
+                                if (org.junit.Test.class.isAssignableFrom(annotation.annotationType())) {
+                                        return true;
+                                }
+                        }
+                }
+                return false;
+        }
 
+        private boolean isRunWithPresentInClassLoader() {
+                return runWith != null;
+        }
+
+        public RobovmTestChecker(ClassLoader classLoader) {
+                this.runWith = tryLoadClass(classLoader, org.junit.runner.RunWith.class.getName());
+                this.nonAbstractClassFilter = new NonAbstractClassFilter();
+        }
 
 }

@@ -99,3 +99,4 @@ Frameworks used:
 * [RxJava] (https://github.com/Netflix/RxJava)
 * [Mockito] (https://code.google.com/p/mockito)
 * [PowerMock] (https://code.google.com/p/powermock)
+* [GSon] (https://code.google.com/p/google-gson)

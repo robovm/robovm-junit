@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,43 +22,43 @@ import org.junit.runner.notification.Failure;
 
 public class ResultObject {
 
-    public Description description;
-    Result result;
-    Failure failure;
-    int resultType;
+        public Description description;
+        Result result;
+        Failure failure;
+        int resultType;
 
-    public ResultObject() {
-    }
+        public ResultObject() {
+        }
 
-    public Description getDescription() {
-        return description;
-    }
+        public Description getDescription() {
+                return description;
+        }
 
-    public void setDescription(Description description) {
-        this.description = description;
-    }
+        public void setDescription(Description description) {
+                this.description = description;
+        }
 
-    public Result getResult() {
-        return result;
-    }
+        public Result getResult() {
+                return result;
+        }
 
-    public void setResult(Result result) {
-        this.result = result;
-    }
+        public void setResult(Result result) {
+                this.result = result;
+        }
 
-    public int getResultType() {
-        return resultType;
-    }
+        public int getResultType() {
+                return resultType;
+        }
 
-    public void setResultType(int resultType) {
-        this.resultType = resultType;
-    }
+        public void setResultType(int resultType) {
+                this.resultType = resultType;
+        }
 
-    public Failure getFailure() {
-        return failure;
-    }
+        public Failure getFailure() {
+                return failure;
+        }
 
-    public void setFailure(Failure failure) {
-        this.failure = failure;
-    }
+        public void setFailure(Failure failure) {
+                this.failure = failure;
+        }
 }

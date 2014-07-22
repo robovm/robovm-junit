@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,47 +22,48 @@ import com.google.gson.*;
 import java.io.*;
 import java.lang.reflect.Type;
 
+public class ThrowableTypeAdapter implements JsonSerializer<Throwable>, JsonDeserializer<Throwable> {
 
-public class ThrowableTypeAdapter implements JsonSerializer<Throwable>, JsonDeserializer<Throwable>{
+        @Override
+        public JsonElement serialize(Throwable throwable, Type type,
+                JsonSerializationContext jsonSerializationContext) {
+                JsonObject jsonObject = new JsonObject();
+                String throwableString = null;
 
-    @Override
-    public JsonElement serialize(Throwable throwable, Type type, JsonSerializationContext jsonSerializationContext) {
-        JsonObject jsonObject = new JsonObject();
-        String throwableString = null;
+                ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                try {
+                        ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
+                        outputStream.writeObject(throwable);
+                        outputStream.flush();
+                        throwableString = new String(Base64Coder.encode(byteStream.toByteArray()));
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
 
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
-            outputStream.writeObject(throwable);
-            outputStream.flush();
-            throwableString = new String(Base64Coder.encode(byteStream.toByteArray()));
-        } catch (IOException e) {
-            e.printStackTrace();
+                jsonObject.addProperty("throwableObject", throwableString);
+
+                return jsonObject;
         }
 
-        jsonObject.addProperty("throwableObject", throwableString);
+        @Override
+        public Throwable deserialize(JsonElement jsonElement, Type type,
+                JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
 
-        return jsonObject;
-    }
+                JsonObject jsonObject = jsonElement.getAsJsonObject();
 
-    @Override
-    public Throwable deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                String throwableString = jsonObject.get("throwableObject").getAsString();
 
-        JsonObject jsonObject = jsonElement.getAsJsonObject();
+                byte bytes[] = Base64Coder.decode(throwableString);
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+                try {
+                        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+                        return (Throwable) objectInputStream.readObject();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                }
 
-        String throwableString = jsonObject.get("throwableObject").getAsString();
-
-        byte bytes[] = Base64Coder.decode(throwableString);
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-            return (Throwable) objectInputStream.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+                return null;
         }
-
-        return null;
-    }
 }

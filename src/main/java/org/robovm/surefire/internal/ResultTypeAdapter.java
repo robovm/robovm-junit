@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@ import org.junit.runner.Result;
 
 import java.lang.reflect.Type;
 
+public class ResultTypeAdapter implements JsonSerializer<Result> {
 
-public class ResultTypeAdapter implements JsonSerializer<Result>{
+        @Override
+        public JsonElement serialize(Result result, Type type, JsonSerializationContext jsonSerializationContext) {
+                JsonObject jsonObject = new JsonObject();
 
-    @Override
-    public JsonElement serialize(Result result, Type type, JsonSerializationContext jsonSerializationContext) {
-        JsonObject jsonObject = new JsonObject();
+                jsonObject.add("fRunTime", new JsonPrimitive(result.getRunTime()));
+                jsonObject.add("fIgnoreCount", new JsonPrimitive(result.getIgnoreCount()));
+                jsonObject.add("fCount", new JsonPrimitive(result.getRunCount()));
 
-        jsonObject.add("fRunTime", new JsonPrimitive(result.getRunTime()));
-        jsonObject.add("fIgnoreCount", new JsonPrimitive(result.getIgnoreCount()));
-        jsonObject.add("fCount", new JsonPrimitive(result.getRunCount()));
-
-        return jsonObject;
-    }
+                return jsonObject;
+        }
 }

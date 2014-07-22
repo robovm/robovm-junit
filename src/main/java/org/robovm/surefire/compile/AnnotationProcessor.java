@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 
 package org.robovm.surefire.compile;
 
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -29,41 +28,42 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.util.Set;
 
-
 @SupportedAnnotationTypes("org.robovm.surefire.compile.RoboVMTest")
-public class AnnotationProcessor extends AbstractProcessor
-{
-    @Override
-    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+public class AnnotationProcessor extends AbstractProcessor {
+        @Override
+        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
-        for (Element elem : roundEnv.getElementsAnnotatedWith(RoboVMTest.class)) {
-            try {
-                String packageName = getPackageName(elem).getQualifiedName().toString();
-                String className = elem.getSimpleName().toString();
+                for (Element elem : roundEnv.getElementsAnnotatedWith(RoboVMTest.class)) {
+                        try {
+                                String packageName = getPackageName(elem).getQualifiedName().toString();
+                                String className = elem.getSimpleName().toString();
 
-                if (!packageName.equals("")) {
-                    className = packageName + "." + className;
+                                if (!packageName.equals("")) {
+                                        className = packageName + "." + className;
+                                }
+
+                                System.err.println("Creating test files: " + "org.robovm.surefire." + ClassGenerator
+                                        .getClassName(className));
+                                System.err.flush();
+                                JavaFileObject javaFileObject =
+                                        processingEnv.getFiler().createSourceFile(
+                                                "org.robovm.surefire." + ClassGenerator.getClassName(className)
+                                                        + "Runner", elem);
+
+                                ClassGenerator.generateSourceForClass(className, javaFileObject);
+                        } catch (IOException e) {
+                                System.err.println("Failed processing annotations");
+                                e.printStackTrace();
+                        }
                 }
 
-                System.err.println("Creating test files: " + "org.robovm.surefire." + ClassGenerator.getClassName(className));
-                System.err.flush();
-                JavaFileObject javaFileObject =
-                        processingEnv.getFiler().createSourceFile("org.robovm.surefire." + ClassGenerator.getClassName(className) + "Runner",elem);
-
-                ClassGenerator.generateSourceForClass(className, javaFileObject);
-            } catch (IOException e) {
-                System.err.println("Failed processing annotations");
-                e.printStackTrace();
-            }
+                return true;
         }
 
-        return true;
-    }
-
-    private PackageElement getPackageName(Element elem) {
-        if (elem.getKind() != ElementKind.PACKAGE) {
-            elem = elem.getEnclosingElement();
+        private PackageElement getPackageName(Element elem) {
+                if (elem.getKind() != ElementKind.PACKAGE) {
+                        elem = elem.getEnclosingElement();
+                }
+                return (PackageElement) elem;
         }
-        return (PackageElement) elem;
-    }
 }

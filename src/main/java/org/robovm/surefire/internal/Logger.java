@@ -1,5 +1,5 @@
 /*
-* Copyright 2014 Ashley Williams
+* Copyright (C) 2014 Trillian Mobile AB
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,23 +16,22 @@
 */
 package org.robovm.surefire.internal;
 
-
 public class Logger {
-    public static void log(String logString) {
+        public static void log(String logString) {
 
-        if (shouldLog()) {
-            System.out.println(logString);
-        }
-    }
-
-    private static boolean shouldLog() {
-
-        String value;
-
-        if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
-            return value.equals("true");
+                if (shouldLog()) {
+                        System.out.println(logString);
+                }
         }
 
-        return false;
-    }
+        private static boolean shouldLog() {
+
+                String value;
+
+                if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
+                        return value.equals("true");
+                }
+
+                return false;
+        }
 }
