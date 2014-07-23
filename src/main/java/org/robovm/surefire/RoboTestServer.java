@@ -180,7 +180,7 @@ public class RoboTestServer extends org.junit.runner.notification.RunListener {
                                                         Logger.log("Test run finished");
                                                         testRunFinished(resultObject.getResult());
                                                         reporter.testSetCompleted(
-                                                                new SimpleReportEntry("done", "done"));
+                                                                new SimpleReportEntry("RoboVMTestRun", "RoboVMTestRun"));
 
                                                 } catch (Exception e) {
                                                         e.printStackTrace();

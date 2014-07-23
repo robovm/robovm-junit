@@ -1,5 +1,6 @@
 *.class
 
 robovm-surefire-provider.iml
+target
 
 .idea

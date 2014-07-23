@@ -29,4 +29,11 @@ public class ConfigUtilsTest {
                 assertTrue(frameworks.contains("framework"));
                 assertTrue(frameworks.contains("UIKit"));
         }
+
+        @Test
+        public void testSystemProperties() {
+                assertTrue(ConfigUtils.getProperty(Constant.SERVER_HOST).equals("localhost"));
+                System.setProperty(Constant.SERVER_HOST,"test");
+                assertTrue(ConfigUtils.getProperty(Constant.SERVER_HOST).equals("test"));
+        }
 }

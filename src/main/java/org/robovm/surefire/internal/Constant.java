@@ -30,4 +30,10 @@ public class Constant {
         public static final String ROBOVM_CONFIG_FILE = "robovm.configFile";
         public static final String DEBUG = "robovm.debug";
         public static final String INSTALL_DIR = "robovm.installDir";
+
+        public static String DEFAULT_SERVER_HOST = "localhost";
+        public static String DEFAULT_SERVER_PORT = "8889";
+
+        public static String DEFAULT_MAVEN_REPOSITORY_DIR = System.getProperty("user.home") + "/.m2";
+        public static String DEFAULT_INSTALL_DIR = "/tmp/surefire/install";
 }

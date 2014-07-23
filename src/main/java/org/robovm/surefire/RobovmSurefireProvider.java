@@ -64,9 +64,9 @@ public class RobovmSurefireProvider extends AbstractProvider {
         }
 
         public void configureSurefire() {
-                ConfigUtils.setSystemProperty(serverPort, Constant.SERVER_PORT);
-                ConfigUtils.setSystemProperty(serverHost, Constant.SERVER_HOST);
-                ConfigUtils.setSystemProperty(mavenRepositoryDir, Constant.MAVEN_REPOSITORY_DIR);
+                serverPort = Integer.parseInt(ConfigUtils.getProperty(Constant.SERVER_PORT));
+                serverHost = ConfigUtils.getProperty(Constant.SERVER_HOST);
+                mavenRepositoryDir = ConfigUtils.getProperty(Constant.MAVEN_REPOSITORY_DIR);
         }
 
         @Override

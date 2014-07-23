@@ -38,8 +38,9 @@ public class ClassGenerator {
                 String host = "localhost";
                 String port = "8889";
 
-                ConfigUtils.setSystemProperty(port, Constant.SERVER_PORT);
-                ConfigUtils.setSystemProperty(host, Constant.SERVER_HOST);
+                host = ConfigUtils.getProperty(Constant.SERVER_HOST);
+                port = ConfigUtils.getProperty(Constant.SERVER_PORT);
+
 
                 try {
             /* clean up previous objects */

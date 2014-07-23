@@ -38,7 +38,6 @@ public class ConfigUtils {
         }
 
         public static void mergeConfigs(Config.Builder configBuilder, String value) throws IOException {
-
                 configBuilder.read(new File(value));
         }
 
@@ -46,19 +45,29 @@ public class ConfigUtils {
                 return System.getProperty(property);
         }
 
-        public static void setSystemProperty(Object objectToSet, String propertyName) {
+        public static String getProperty(String property) {
+                String value;
 
-                String value = getSystemProperty(propertyName);
-                if (value == null) {
-                        return;
+                if ((value = getSystemProperty(property)) != null) {
+                        return value;
                 }
+                return getDefaultValue(property);
+        }
 
-                if (objectToSet instanceof String) {
-                        objectToSet = getSystemProperty(propertyName);
-                }
-                if (objectToSet instanceof Integer) {
-                        objectToSet = Integer.parseInt(getSystemProperty(propertyName));
-                }
+        private static String getDefaultValue(String property) {
+                switch (property) {
+                        case Constant.SERVER_HOST:
+                                return Constant.DEFAULT_SERVER_HOST;
 
+                        case Constant.SERVER_PORT:
+                                return Constant.DEFAULT_SERVER_PORT;
+
+                        case Constant.MAVEN_REPOSITORY_DIR:
+                                return Constant.DEFAULT_MAVEN_REPOSITORY_DIR;
+
+                        case Constant.INSTALL_DIR:
+                                return Constant.DEFAULT_INSTALL_DIR;
+                }
+                return null;
         }
 }

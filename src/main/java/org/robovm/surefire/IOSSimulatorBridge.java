@@ -42,15 +42,15 @@ public class IOSSimulatorBridge {
 
         private Socket hostSocket;
         private Config.Builder configBuilder;
-        private String mavenRepositoryDir = System.getProperty("user.home") + "/.m2";
+        private String mavenRepositoryDir;
         private boolean debug = false;
-        private String installDir = "/tmp/surefire/install";
+        private String installDir;
 
         public void executeTestSet(Class testToRun, RunListener reporter, RunNotifier runNotifier) throws IOException {
                 this.testToRun = testToRun;
                 String value;
-                ConfigUtils.setSystemProperty(mavenRepositoryDir, MAVEN_REPOSITORY_DIR);
-                ConfigUtils.setSystemProperty(installDir, INSTALL_DIR);
+                mavenRepositoryDir = ConfigUtils.getProperty(MAVEN_REPOSITORY_DIR);
+                installDir = ConfigUtils.getProperty(INSTALL_DIR);
 
                 if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
                         if (value.equals("true")) {
