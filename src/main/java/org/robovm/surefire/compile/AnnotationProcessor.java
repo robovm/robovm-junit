@@ -30,40 +30,40 @@ import java.util.Set;
 
 @SupportedAnnotationTypes("org.robovm.surefire.compile.RoboVMTest")
 public class AnnotationProcessor extends AbstractProcessor {
-        @Override
-        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
-                for (Element elem : roundEnv.getElementsAnnotatedWith(RoboVMTest.class)) {
-                        try {
-                                String packageName = getPackageName(elem).getQualifiedName().toString();
-                                String className = elem.getSimpleName().toString();
+        for (Element elem : roundEnv.getElementsAnnotatedWith(RoboVMTest.class)) {
+            try {
+                String packageName = getPackageName(elem).getQualifiedName().toString();
+                String className = elem.getSimpleName().toString();
 
-                                if (!packageName.equals("")) {
-                                        className = packageName + "." + className;
-                                }
-
-                                System.err.println("Creating test files: " + "org.robovm.surefire." + ClassGenerator
-                                        .getClassName(className));
-                                System.err.flush();
-                                JavaFileObject javaFileObject =
-                                        processingEnv.getFiler().createSourceFile(
-                                                "org.robovm.surefire." + ClassGenerator.getClassName(className)
-                                                        + "Runner", elem);
-
-                                ClassGenerator.generateSourceForClass(className, javaFileObject);
-                        } catch (IOException e) {
-                                System.err.println("Failed processing annotations");
-                                e.printStackTrace();
-                        }
+                if (!packageName.equals("")) {
+                    className = packageName + "." + className;
                 }
 
-                return true;
+                System.err.println("Creating test files: " + "org.robovm.surefire." + ClassGenerator
+                    .getClassName(className));
+                System.err.flush();
+                JavaFileObject javaFileObject =
+                    processingEnv.getFiler().createSourceFile(
+                        "org.robovm.surefire." + ClassGenerator.getClassName(className)
+                            + "Runner", elem);
+
+                ClassGenerator.generateSourceForClass(className, javaFileObject);
+            } catch (IOException e) {
+                System.err.println("Failed processing annotations");
+                e.printStackTrace();
+            }
         }
 
-        private PackageElement getPackageName(Element elem) {
-                if (elem.getKind() != ElementKind.PACKAGE) {
-                        elem = elem.getEnclosingElement();
-                }
-                return (PackageElement) elem;
+        return true;
+    }
+
+    private PackageElement getPackageName(Element elem) {
+        if (elem.getKind() != ElementKind.PACKAGE) {
+            elem = elem.getEnclosingElement();
         }
+        return (PackageElement) elem;
+    }
 }

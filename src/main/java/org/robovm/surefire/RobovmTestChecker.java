@@ -26,56 +26,56 @@ import static org.apache.maven.surefire.util.ReflectionUtils.tryLoadClass;
 
 public class RobovmTestChecker implements ScannerFilter {
 
-        private final Class runWith;
-        private final NonAbstractClassFilter nonAbstractClassFilter;
+    private final Class runWith;
+    private final NonAbstractClassFilter nonAbstractClassFilter;
 
-        @Override
-        public boolean accept(Class testClass) {
-                return isValidJunit4Test(testClass);
+    @Override
+    public boolean accept(Class testClass) {
+        return isValidJunit4Test(testClass);
+    }
+
+    private boolean isValidJunit4Test(Class testClass) {
+        if (!nonAbstractClassFilter.accept(testClass)) {
+            return false;
         }
+        if (isRunWithPresentInClassLoader()) {
+            Annotation runWithAnnotation = testClass.getAnnotation(runWith);
+            if (runWithAnnotation != null) {
+                return true;
+            }
+        }
+        return lookForAnnotateMethods(testClass);
+    }
 
-        private boolean isValidJunit4Test(Class testClass) {
-                if (!nonAbstractClassFilter.accept(testClass)) {
-                        return false;
+    private boolean lookForAnnotateMethods(Class testClass) {
+        Class classToCheck = testClass;
+        while (classToCheck != null) {
+            if (checkForTestAnnotatedMethod(classToCheck)) {
+                return true;
+            }
+            classToCheck = classToCheck.getSuperclass();
+        }
+        return false;
+    }
+
+    private boolean checkForTestAnnotatedMethod(Class classToCheck) {
+        for (Method m : classToCheck.getDeclaredMethods()) {
+            for (Annotation annotation : m.getAnnotations()) {
+                if (org.junit.Test.class.isAssignableFrom(annotation.annotationType())) {
+                    return true;
                 }
-                if (isRunWithPresentInClassLoader()) {
-                        Annotation runWithAnnotation = testClass.getAnnotation(runWith);
-                        if (runWithAnnotation != null) {
-                                return true;
-                        }
-                }
-                return lookForAnnotateMethods(testClass);
+            }
         }
+        return false;
+    }
 
-        private boolean lookForAnnotateMethods(Class testClass) {
-                Class classToCheck = testClass;
-                while (classToCheck != null) {
-                        if (checkForTestAnnotatedMethod(classToCheck)) {
-                                return true;
-                        }
-                        classToCheck = classToCheck.getSuperclass();
-                }
-                return false;
-        }
+    private boolean isRunWithPresentInClassLoader() {
+        return runWith != null;
+    }
 
-        private boolean checkForTestAnnotatedMethod(Class classToCheck) {
-                for (Method m : classToCheck.getDeclaredMethods()) {
-                        for (Annotation annotation : m.getAnnotations()) {
-                                if (org.junit.Test.class.isAssignableFrom(annotation.annotationType())) {
-                                        return true;
-                                }
-                        }
-                }
-                return false;
-        }
-
-        private boolean isRunWithPresentInClassLoader() {
-                return runWith != null;
-        }
-
-        public RobovmTestChecker(ClassLoader classLoader) {
-                this.runWith = tryLoadClass(classLoader, org.junit.runner.RunWith.class.getName());
-                this.nonAbstractClassFilter = new NonAbstractClassFilter();
-        }
+    public RobovmTestChecker(ClassLoader classLoader) {
+        this.runWith = tryLoadClass(classLoader, org.junit.runner.RunWith.class.getName());
+        this.nonAbstractClassFilter = new NonAbstractClassFilter();
+    }
 
 }

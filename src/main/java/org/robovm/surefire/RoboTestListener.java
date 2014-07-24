@@ -33,72 +33,72 @@ import static org.robovm.surefire.internal.Constant.TEST_FAILURE;
 
 public class RoboTestListener extends org.junit.runner.notification.RunListener {
 
-        private final RunListener reporter;
+    private final RunListener reporter;
 
-        private IOSSimulatorBridge iosSimulatorBridge;
-        private static ArrayList<String> failedTests = new ArrayList<String>();
+    private IOSSimulatorBridge iosSimulatorBridge;
+    private static ArrayList<String> failedTests = new ArrayList<String>();
 
-        public RoboTestListener(RunListener reporter, String host, String port) throws IOException {
-                this.reporter = reporter;
-                iosSimulatorBridge = new IOSSimulatorBridge();
-                iosSimulatorBridge.initiateConnectionToHost(host, port);
+    public RoboTestListener(RunListener reporter, String host, String port) throws IOException {
+        this.reporter = reporter;
+        iosSimulatorBridge = new IOSSimulatorBridge();
+        iosSimulatorBridge.initiateConnectionToHost(host, port);
+    }
+
+    @Override
+    public void testIgnored(Description description) throws Exception {
+        iosSimulatorBridge.sendToHost(TEST_IGNORED, createDescriptionResult(description, TEST_IGNORED));
+    }
+
+    @Override
+    public void testRunStarted(Description description) throws Exception {
+        iosSimulatorBridge.sendToHost(TEST_RUN_STARTED, createDescriptionResult(description, TEST_RUN_STARTED));
+    }
+
+    @Override
+    public void testRunFinished(Result result) throws Exception {
+        iosSimulatorBridge.sendToHost(TEST_RUN_FINISHED, createResultResult(result, TEST_RUN_FINISHED));
+    }
+
+    @Override
+    public void testStarted(Description description) throws Exception {
+        iosSimulatorBridge.sendToHost(TEST_STARTED, createDescriptionResult(description, TEST_STARTED));
+    }
+
+    @Override
+    public void testFinished(Description description) throws Exception {
+        for (String failedTest : failedTests) {
+            if (description.getDisplayName().equals(failedTest)) {
+                return;
+            }
         }
+        iosSimulatorBridge.sendToHost(TEST_FINISHED, createDescriptionResult(description, TEST_FINISHED));
+    }
 
-        @Override
-        public void testIgnored(Description description) throws Exception {
-                iosSimulatorBridge.sendToHost(TEST_IGNORED, createDescriptionResult(description, TEST_IGNORED));
-        }
+    @Override
+    public void testFailure(Failure failure) throws Exception {
+        failedTests.add(failure.getDescription().getDisplayName());
+        iosSimulatorBridge.sendToHost(TEST_FAILURE, createFailureResult(failure, TEST_FAILURE));
+    }
 
-        @Override
-        public void testRunStarted(Description description) throws Exception {
-                iosSimulatorBridge.sendToHost(TEST_RUN_STARTED, createDescriptionResult(description, TEST_RUN_STARTED));
-        }
+    private ResultObject createFailureResult(Failure failure, int type) {
+        ResultObject resultObject = new ResultObject();
+        resultObject.setFailure(failure);
+        resultObject.setResultType(type);
+        return resultObject;
+    }
 
-        @Override
-        public void testRunFinished(Result result) throws Exception {
-                iosSimulatorBridge.sendToHost(TEST_RUN_FINISHED, createResultResult(result, TEST_RUN_FINISHED));
-        }
+    private ResultObject createDescriptionResult(Description description, int type) {
+        ResultObject resultObject = new ResultObject();
+        resultObject.setDescription(description);
+        resultObject.setResultType(type);
+        return resultObject;
+    }
 
-        @Override
-        public void testStarted(Description description) throws Exception {
-                iosSimulatorBridge.sendToHost(TEST_STARTED, createDescriptionResult(description, TEST_STARTED));
-        }
-
-        @Override
-        public void testFinished(Description description) throws Exception {
-                for (String failedTest : failedTests) {
-                        if (description.getDisplayName().equals(failedTest)) {
-                                return;
-                        }
-                }
-                iosSimulatorBridge.sendToHost(TEST_FINISHED, createDescriptionResult(description, TEST_FINISHED));
-        }
-
-        @Override
-        public void testFailure(Failure failure) throws Exception {
-                failedTests.add(failure.getDescription().getDisplayName());
-                iosSimulatorBridge.sendToHost(TEST_FAILURE, createFailureResult(failure, TEST_FAILURE));
-        }
-
-        private ResultObject createFailureResult(Failure failure, int type) {
-                ResultObject resultObject = new ResultObject();
-                resultObject.setFailure(failure);
-                resultObject.setResultType(type);
-                return resultObject;
-        }
-
-        private ResultObject createDescriptionResult(Description description, int type) {
-                ResultObject resultObject = new ResultObject();
-                resultObject.setDescription(description);
-                resultObject.setResultType(type);
-                return resultObject;
-        }
-
-        private ResultObject createResultResult(Result result, int type) {
-                ResultObject resultObject = new ResultObject();
-                resultObject.setResult(result);
-                resultObject.setResultType(type);
-                return resultObject;
-        }
+    private ResultObject createResultResult(Result result, int type) {
+        ResultObject resultObject = new ResultObject();
+        resultObject.setResult(result);
+        resultObject.setResultType(type);
+        return resultObject;
+    }
 
 }

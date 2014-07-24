@@ -16,29 +16,29 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RoboTestServerTest {
 
-        @Test
-        public void testServerReceivesContent() throws Exception {
+    @Test
+    public void testServerReceivesContent() throws Exception {
 
-                final RoboTestServer roboTestServer = Mockito.mock(RoboTestServer.class);
-                Mockito.doCallRealMethod().when(roboTestServer).startServer(8889);
+        final RoboTestServer roboTestServer = Mockito.mock(RoboTestServer.class);
+        Mockito.doCallRealMethod().when(roboTestServer).startServer(8889);
 
-                roboTestServer.startServer(8889);
+        roboTestServer.startServer(8889);
 
-                Socket socket = new Socket("localhost", 8889);
-                socket.getOutputStream();
-                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-                String jsonString = "{\"resultType\":2,\"description\":{\"display_name\":\"null\",\"sub_description\":[{\"display_name\":\"com.example.TestTest\",\"sub_description\":[{\"display_name\":\"testTest(com.example.TestTest)\",\"sub_description\":[]}]}]}}";
+        Socket socket = new Socket("localhost", 8889);
+        socket.getOutputStream();
+        PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+        String jsonString = "{\"resultType\":2,\"description\":{\"display_name\":\"null\",\"sub_description\":[{\"display_name\":\"com.example.TestTest\",\"sub_description\":[{\"display_name\":\"testTest(com.example.TestTest)\",\"sub_description\":[]}]}]}}";
 
-                writer.write(jsonString);
-                writer.flush();
-                writer.close();
+        writer.write(jsonString);
+        writer.flush();
+        writer.close();
 
-                ResultObject resultObject = new GsonBuilder()
-                        .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                        .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                        .create()
-                        .fromJson(jsonString, ResultObject.class);
+        ResultObject resultObject = new GsonBuilder()
+            .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
+            .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
+            .create()
+            .fromJson(jsonString, ResultObject.class);
 
-                Mockito.verify(roboTestServer).testRunStarted(resultObject.getDescription());
-        }
+        Mockito.verify(roboTestServer).testRunStarted(resultObject.getDescription());
+    }
 }

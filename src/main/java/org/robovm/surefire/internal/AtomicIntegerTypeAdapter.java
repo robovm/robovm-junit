@@ -23,16 +23,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AtomicIntegerTypeAdapter implements JsonSerializer<AtomicInteger>, JsonDeserializer<AtomicInteger> {
 
-        @Override
-        public AtomicInteger deserialize(JsonElement jsonElement, Type type,
-                JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-                int intValue = jsonElement.getAsInt();
-                return new AtomicInteger(intValue);
-        }
+    @Override
+    public AtomicInteger deserialize(JsonElement jsonElement, Type type,
+        JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+        int intValue = jsonElement.getAsInt();
+        return new AtomicInteger(intValue);
+    }
 
-        @Override
-        public JsonElement serialize(AtomicInteger atomicInteger, Type type,
-                JsonSerializationContext jsonSerializationContext) {
-                return new JsonPrimitive(atomicInteger.get());
-        }
+    @Override
+    public JsonElement serialize(AtomicInteger atomicInteger, Type type,
+        JsonSerializationContext jsonSerializationContext) {
+        return new JsonPrimitive(atomicInteger.get());
+    }
 }

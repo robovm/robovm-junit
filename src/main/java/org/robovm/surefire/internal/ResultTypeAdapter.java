@@ -23,14 +23,14 @@ import java.lang.reflect.Type;
 
 public class ResultTypeAdapter implements JsonSerializer<Result> {
 
-        @Override
-        public JsonElement serialize(Result result, Type type, JsonSerializationContext jsonSerializationContext) {
-                JsonObject jsonObject = new JsonObject();
+    @Override
+    public JsonElement serialize(Result result, Type type, JsonSerializationContext jsonSerializationContext) {
+        JsonObject jsonObject = new JsonObject();
 
-                jsonObject.add("fRunTime", new JsonPrimitive(result.getRunTime()));
-                jsonObject.add("fIgnoreCount", new JsonPrimitive(result.getIgnoreCount()));
-                jsonObject.add("fCount", new JsonPrimitive(result.getRunCount()));
+        jsonObject.add("fRunTime", new JsonPrimitive(result.getRunTime()));
+        jsonObject.add("fIgnoreCount", new JsonPrimitive(result.getIgnoreCount()));
+        jsonObject.add("fCount", new JsonPrimitive(result.getRunCount()));
 
-                return jsonObject;
-        }
+        return jsonObject;
+    }
 }

@@ -26,48 +26,48 @@ import java.io.IOException;
  */
 public class ConfigUtils {
 
-        public static Config.Builder createConfig() throws IOException {
-                Config.Builder configBuilder = new Config.Builder();
-                String value;
+    public static Config.Builder createConfig() throws IOException {
+        Config.Builder configBuilder = new Config.Builder();
+        String value;
 
-                if ((value = getSystemProperty(Constant.ROBOVM_CONFIG_FILE)) != null) {
-                        mergeConfigs(configBuilder, value);
-                }
-
-                return configBuilder;
+        if ((value = getSystemProperty(Constant.ROBOVM_CONFIG_FILE)) != null) {
+            mergeConfigs(configBuilder, value);
         }
 
-        public static void mergeConfigs(Config.Builder configBuilder, String value) throws IOException {
-                configBuilder.read(new File(value));
+        return configBuilder;
+    }
+
+    public static void mergeConfigs(Config.Builder configBuilder, String value) throws IOException {
+        configBuilder.read(new File(value));
+    }
+
+    public static String getSystemProperty(String property) {
+        return System.getProperty(property);
+    }
+
+    public static String getProperty(String property) {
+        String value;
+
+        if ((value = getSystemProperty(property)) != null) {
+            return value;
         }
+        return getDefaultValue(property);
+    }
 
-        public static String getSystemProperty(String property) {
-                return System.getProperty(property);
+    private static String getDefaultValue(String property) {
+        switch (property) {
+            case Constant.SERVER_HOST:
+                return Constant.DEFAULT_SERVER_HOST;
+
+            case Constant.SERVER_PORT:
+                return Constant.DEFAULT_SERVER_PORT;
+
+            case Constant.MAVEN_REPOSITORY_DIR:
+                return Constant.DEFAULT_MAVEN_REPOSITORY_DIR;
+
+            case Constant.INSTALL_DIR:
+                return Constant.DEFAULT_INSTALL_DIR;
         }
-
-        public static String getProperty(String property) {
-                String value;
-
-                if ((value = getSystemProperty(property)) != null) {
-                        return value;
-                }
-                return getDefaultValue(property);
-        }
-
-        private static String getDefaultValue(String property) {
-                switch (property) {
-                        case Constant.SERVER_HOST:
-                                return Constant.DEFAULT_SERVER_HOST;
-
-                        case Constant.SERVER_PORT:
-                                return Constant.DEFAULT_SERVER_PORT;
-
-                        case Constant.MAVEN_REPOSITORY_DIR:
-                                return Constant.DEFAULT_MAVEN_REPOSITORY_DIR;
-
-                        case Constant.INSTALL_DIR:
-                                return Constant.DEFAULT_INSTALL_DIR;
-                }
-                return null;
-        }
+        return null;
+    }
 }

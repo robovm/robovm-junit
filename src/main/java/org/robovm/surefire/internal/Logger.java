@@ -17,21 +17,21 @@
 package org.robovm.surefire.internal;
 
 public class Logger {
-        public static void log(String logString) {
+    public static void log(String logString) {
 
-                if (shouldLog()) {
-                        System.out.println(logString);
-                }
+        if (shouldLog()) {
+            System.out.println(logString);
+        }
+    }
+
+    private static boolean shouldLog() {
+
+        String value;
+
+        if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
+            return value.equals("true");
         }
 
-        private static boolean shouldLog() {
-
-                String value;
-
-                if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
-                        return value.equals("true");
-                }
-
-                return false;
-        }
+        return false;
+    }
 }

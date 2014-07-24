@@ -16,24 +16,24 @@ import static junit.framework.Assert.assertTrue;
 @PrepareForTest({ Config.Builder.class })
 public class ConfigUtilsTest {
 
-        @Test
-        public void testConfigMerge() throws IOException {
-                Config.Builder configBuilder = new Config.Builder();
-                configBuilder.addForceLinkClass("test");
-                configBuilder.addFramework("framework");
+    @Test
+    public void testConfigMerge() throws IOException {
+        Config.Builder configBuilder = new Config.Builder();
+        configBuilder.addForceLinkClass("test");
+        configBuilder.addFramework("framework");
 
-                ConfigUtils.mergeConfigs(configBuilder, "src/test/resources/config.xml");
-                Config config = (Config) Whitebox.getInternalState(configBuilder, "config");
+        ConfigUtils.mergeConfigs(configBuilder, "src/test/resources/config.xml");
+        Config config = (Config) Whitebox.getInternalState(configBuilder, "config");
 
-                List<String> frameworks = config.getFrameworks();
-                assertTrue(frameworks.contains("framework"));
-                assertTrue(frameworks.contains("UIKit"));
-        }
+        List<String> frameworks = config.getFrameworks();
+        assertTrue(frameworks.contains("framework"));
+        assertTrue(frameworks.contains("UIKit"));
+    }
 
-        @Test
-        public void testSystemProperties() {
-                assertTrue(ConfigUtils.getProperty(Constant.SERVER_HOST).equals("localhost"));
-                System.setProperty(Constant.SERVER_HOST,"test");
-                assertTrue(ConfigUtils.getProperty(Constant.SERVER_HOST).equals("test"));
-        }
+    @Test
+    public void testSystemProperties() {
+        assertTrue(ConfigUtils.getProperty(Constant.SERVER_HOST).equals("localhost"));
+        System.setProperty(Constant.SERVER_HOST,"test");
+        assertTrue(ConfigUtils.getProperty(Constant.SERVER_HOST).equals("test"));
+    }
 }

@@ -38,154 +38,154 @@ import static org.robovm.surefire.internal.Constant.*;
 
 public class IOSSimulatorBridge {
 
-        private Class testToRun;
+    private Class testToRun;
 
-        private Socket hostSocket;
-        private Config.Builder configBuilder;
-        private String mavenRepositoryDir;
-        private boolean debug = false;
-        private String installDir;
+    private Socket hostSocket;
+    private Config.Builder configBuilder;
+    private String mavenRepositoryDir;
+    private boolean debug = false;
+    private String installDir;
 
-        public void executeTestSet(Class testToRun, RunListener reporter, RunNotifier runNotifier) throws IOException {
-                this.testToRun = testToRun;
-                String value;
-                mavenRepositoryDir = ConfigUtils.getProperty(MAVEN_REPOSITORY_DIR);
-                installDir = ConfigUtils.getProperty(INSTALL_DIR);
+    public void executeTestSet(Class testToRun, RunListener reporter, RunNotifier runNotifier) throws IOException {
+        this.testToRun = testToRun;
+        String value;
+        mavenRepositoryDir = ConfigUtils.getProperty(MAVEN_REPOSITORY_DIR);
+        installDir = ConfigUtils.getProperty(INSTALL_DIR);
 
-                if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
-                        if (value.equals("true")) {
-                                debug = true;
-                        }
-                }
-
-                compileAndRunTest();
+        if ((value = ConfigUtils.getSystemProperty(Constant.DEBUG)) != null) {
+            if (value.equals("true")) {
+                debug = true;
+            }
         }
 
-        private void compileAndRunTest() throws IOException {
+        compileAndRunTest();
+    }
 
-                if (configBuilder == null) {
-                        configBuilder = new Config.Builder();
-                }
+    private void compileAndRunTest() throws IOException {
 
-                configBuilder.home(RobovmHelper.findRoboHome());
-                configBuilder.addClasspathEntry(new File("target/test-classes"));
-                configBuilder.mainClass("org.robovm.surefire" + getClassName(testToRun.getName()) + "Runner");
-                configBuilder.addClasspathEntry(new File(mavenRepositoryDir
-                        + "/repository/org/apache/maven/surefire/surefire-junit4/2.12.4/surefire-junit4-2.12.4.jar"));
-                configBuilder.addClasspathEntry(new File("/Users/ash/Downloads/robovm-0.0.14/lib/robovm-compiler.jar"));
-                configBuilder.addClasspathEntry(
-                        new File(mavenRepositoryDir + "/repository/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar"));
-                configBuilder.addClasspathEntry(
-                        new File(mavenRepositoryDir + "/repository/junit/junit/4.8.2/junit-4.8.2.jar"));
-                configBuilder.addClasspathEntry(new File(mavenRepositoryDir
-                        + "/repository/org/robovm/robovm-surefire-provider/1.0/robovm-surefire-provider-1.0.jar"));
-                configBuilder.addClasspathEntry(new File(mavenRepositoryDir
-                        + "/repository/org/apache/maven/surefire/surefire-api/2.17/surefire-api-2.17.jar"));
-                configBuilder.addClasspathEntry(new File(mavenRepositoryDir
-                        + "/repository/biz/source_code/base64coder/2010-12-19/base64coder-2010-12-19.jar"));
-                configBuilder.addForceLinkClass("com.google.gson.GsonBuilder");
-                configBuilder.addForceLinkClass("org.robovm.surefire.internal.*");
-                configBuilder.addForceLinkClass("org.junit.runner.Description");
-                configBuilder.addForceLinkClass("org.junit.runner.Result");
-                configBuilder.addForceLinkClass("org.apache.maven.surefire.report.RunListener");
-                configBuilder.addForceLinkClass("org.apache.harmony.security.provider.cert.DRLCertFactory");
-                configBuilder.addForceLinkClass("com.android.org.bouncycastle.jce.provider.BouncyCastleProvider");
-                configBuilder.addForceLinkClass("org.apache.harmony.security.provider.crypto.CryptoProvider");
-                configBuilder.addForceLinkClass("com.android.org.conscrypt.*");
-                configBuilder.installDir(new File(installDir));
-                configBuilder.os(OS.ios);
-                configBuilder.arch(Arch.x86);
-                configBuilder.debug(false);
-                if (debug) {
-                        configBuilder.logger(new ConsoleLogger(true));
-                }
-
-                new File(installDir).mkdirs();
-
-                Logger.log("Building Runner");
-                AppCompiler compiler = new AppCompiler(configBuilder.build());
-                compiler.compile();
-
-                try {
-                        Config config = configBuilder.build();
-
-                        Logger.log("Launching Simulator");
-                        LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
-                        config.getTarget().launch(launchParameters).waitFor();
-
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-                } catch (IOException e) {
-                        e.printStackTrace();
-                }
+        if (configBuilder == null) {
+            configBuilder = new Config.Builder();
         }
 
-        private String getClassName(String name) {
-                if (name.lastIndexOf('.') != -1) {
-                        return name.substring(name.lastIndexOf('.'));
-                }
-                return name;
+        configBuilder.home(RobovmHelper.findRoboHome());
+        configBuilder.addClasspathEntry(new File("target/test-classes"));
+        configBuilder.mainClass("org.robovm.surefire" + getClassName(testToRun.getName()) + "Runner");
+        configBuilder.addClasspathEntry(new File(mavenRepositoryDir
+            + "/repository/org/apache/maven/surefire/surefire-junit4/2.12.4/surefire-junit4-2.12.4.jar"));
+        configBuilder.addClasspathEntry(new File("/Users/ash/Downloads/robovm-0.0.14/lib/robovm-compiler.jar"));
+        configBuilder.addClasspathEntry(
+            new File(mavenRepositoryDir + "/repository/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar"));
+        configBuilder.addClasspathEntry(
+            new File(mavenRepositoryDir + "/repository/junit/junit/4.8.2/junit-4.8.2.jar"));
+        configBuilder.addClasspathEntry(new File(mavenRepositoryDir
+            + "/repository/org/robovm/robovm-surefire-provider/1.0/robovm-surefire-provider-1.0.jar"));
+        configBuilder.addClasspathEntry(new File(mavenRepositoryDir
+            + "/repository/org/apache/maven/surefire/surefire-api/2.17/surefire-api-2.17.jar"));
+        configBuilder.addClasspathEntry(new File(mavenRepositoryDir
+            + "/repository/biz/source_code/base64coder/2010-12-19/base64coder-2010-12-19.jar"));
+        configBuilder.addForceLinkClass("com.google.gson.GsonBuilder");
+        configBuilder.addForceLinkClass("org.robovm.surefire.internal.*");
+        configBuilder.addForceLinkClass("org.junit.runner.Description");
+        configBuilder.addForceLinkClass("org.junit.runner.Result");
+        configBuilder.addForceLinkClass("org.apache.maven.surefire.report.RunListener");
+        configBuilder.addForceLinkClass("org.apache.harmony.security.provider.cert.DRLCertFactory");
+        configBuilder.addForceLinkClass("com.android.org.bouncycastle.jce.provider.BouncyCastleProvider");
+        configBuilder.addForceLinkClass("org.apache.harmony.security.provider.crypto.CryptoProvider");
+        configBuilder.addForceLinkClass("com.android.org.conscrypt.*");
+        configBuilder.installDir(new File(installDir));
+        configBuilder.os(OS.ios);
+        configBuilder.arch(Arch.x86);
+        configBuilder.debug(false);
+        if (debug) {
+            configBuilder.logger(new ConsoleLogger(true));
         }
 
-        public void initiateConnectionToHost(String ip, String port) throws IOException {
-                hostSocket = new Socket(ip, Integer.parseInt(port));
+        new File(installDir).mkdirs();
+
+        Logger.log("Building Runner");
+        AppCompiler compiler = new AppCompiler(configBuilder.build());
+        compiler.compile();
+
+        try {
+            Config config = configBuilder.build();
+
+            Logger.log("Launching Simulator");
+            LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
+            config.getTarget().launch(launchParameters).waitFor();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        public void sendToHost(int type, ResultObject message) {
-
-                if (type == TEST_RUN_FINISHED) {
-                        try {
-                                transmit(message);
-                                hostSocket.close();
-                                Logger.log("Socket closed");
-                        } catch (Exception e) {
-                                e.printStackTrace();
-                        }
-                } else {
-                        try {
-                                transmit(message);
-                        } catch (Exception e) {
-                                e.printStackTrace();
-                        }
-                }
+    private String getClassName(String name) {
+        if (name.lastIndexOf('.') != -1) {
+            return name.substring(name.lastIndexOf('.'));
         }
+        return name;
+    }
 
-        private void transmit(ResultObject message) throws IOException, InterruptedException {
+    public void initiateConnectionToHost(String ip, String port) throws IOException {
+        hostSocket = new Socket(ip, Integer.parseInt(port));
+    }
 
-                if (hostSocket == null) {
-                        throw new RuntimeException("Connection to host died");
-                } else {
-                        Logger.log("Transmitting to host");
-                        if (hostSocket.isConnected()) {
-                                Logger.log("socket connected");
-                        } else {
-                                Logger.log("socket not connected");
-                        }
+    public void sendToHost(int type, ResultObject message) {
 
-                        PrintWriter writer = null;
+        if (type == TEST_RUN_FINISHED) {
+            try {
+                transmit(message);
+                hostSocket.close();
+                Logger.log("Socket closed");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                transmit(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-                        String transmitMessage = new GsonBuilder()
-                                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
-                                .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
-                                .create().toJson(message);
+    private void transmit(ResultObject message) throws IOException, InterruptedException {
 
-                        Logger.log("Client thread: " + Thread.currentThread().getId());
-                        Logger.log("GSON created");
-                        Logger.log("Sending : " + transmitMessage);
-                        writer = new PrintWriter(hostSocket.getOutputStream(), true);
-                        writer.println(transmitMessage);
-                        writer.flush();
+        if (hostSocket == null) {
+            throw new RuntimeException("Connection to host died");
+        } else {
+            Logger.log("Transmitting to host");
+            if (hostSocket.isConnected()) {
+                Logger.log("socket connected");
+            } else {
+                Logger.log("socket not connected");
+            }
+
+            PrintWriter writer = null;
+
+            String transmitMessage = new GsonBuilder()
+                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
+                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
+                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
+                .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
+                .create().toJson(message);
+
+            Logger.log("Client thread: " + Thread.currentThread().getId());
+            Logger.log("GSON created");
+            Logger.log("Sending : " + transmitMessage);
+            writer = new PrintWriter(hostSocket.getOutputStream(), true);
+            writer.println(transmitMessage);
+            writer.flush();
             /* Give server time to process resonse */
-                        Thread.sleep(2000);
+            Thread.sleep(2000);
 
-                        Logger.log("transmitted");
-                }
+            Logger.log("transmitted");
         }
+    }
 
-        public void setConfig(Config.Builder config) {
-                this.configBuilder = config;
-        }
+    public void setConfig(Config.Builder config) {
+        this.configBuilder = config;
+    }
 
 }

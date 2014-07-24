@@ -34,46 +34,46 @@ import java.util.EnumSet;
  */
 public class ClassGenerator {
 
-        public static void generateSourceForClass(String className, JavaFileObject javaFileObject) {
-                String host = "localhost";
-                String port = "8889";
+    public static void generateSourceForClass(String className, JavaFileObject javaFileObject) {
+        String host = "localhost";
+        String port = "8889";
 
-                host = ConfigUtils.getProperty(Constant.SERVER_HOST);
-                port = ConfigUtils.getProperty(Constant.SERVER_PORT);
+        host = ConfigUtils.getProperty(Constant.SERVER_HOST);
+        port = ConfigUtils.getProperty(Constant.SERVER_PORT);
 
 
-                try {
+        try {
             /* clean up previous objects */
-                        javaFileObject.delete();
-                        JavaWriter javaWriter = new JavaWriter(javaFileObject.openWriter());
-                        javaWriter.emitPackage("org.robovm.surefire")
-                                .emitImports(RoboTestListener.class)
-                                .emitImports(JUnitCore.class)
-                                .emitImports(IOException.class)
-                                .beginType(getClassName(className) + "Runner", "class",
-                                        EnumSet.of(Modifier.PUBLIC, Modifier.FINAL), null)
+            javaFileObject.delete();
+            JavaWriter javaWriter = new JavaWriter(javaFileObject.openWriter());
+            javaWriter.emitPackage("org.robovm.surefire")
+                .emitImports(RoboTestListener.class)
+                .emitImports(JUnitCore.class)
+                .emitImports(IOException.class)
+                .beginType(getClassName(className) + "Runner", "class",
+                    EnumSet.of(Modifier.PUBLIC, Modifier.FINAL), null)
 
-                                .beginMethod("void", "main", EnumSet.of(Modifier.PUBLIC, Modifier.STATIC),
-                                        Arrays.asList("String[]", "args"),
-                                        Arrays.asList("IOException"))
-                                .emitStatement("JUnitCore jUnitCore = new JUnitCore()")
-                                .emitStatement(
-                                        "jUnitCore.addListener(new RoboTestListener(null, \"" + host + "\", \"" + port
-                                                + "\"))")
-                                .emitStatement("jUnitCore.run(" + className + ".class)")
-                                .endMethod()
-                                .endType()
-                                .close();
+                .beginMethod("void", "main", EnumSet.of(Modifier.PUBLIC, Modifier.STATIC),
+                    Arrays.asList("String[]", "args"),
+                    Arrays.asList("IOException"))
+                .emitStatement("JUnitCore jUnitCore = new JUnitCore()")
+                .emitStatement(
+                    "jUnitCore.addListener(new RoboTestListener(null, \"" + host + "\", \"" + port
+                        + "\"))")
+                .emitStatement("jUnitCore.run(" + className + ".class)")
+                .endMethod()
+                .endType()
+                .close();
 
-                } catch (IOException e) {
-                        e.printStackTrace();
-                }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        public static String getClassName(String className) {
-                if (className.lastIndexOf(".") != -1) {
-                        return className.substring(className.lastIndexOf(".") + 1);
-                }
-                return className;
+    public static String getClassName(String className) {
+        if (className.lastIndexOf(".") != -1) {
+            return className.substring(className.lastIndexOf(".") + 1);
         }
+        return className;
+    }
 }

@@ -23,36 +23,36 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class DescriptionTypeAdapter implements JsonDeserializer<Description>, JsonSerializer<Description> {
-        @Override
-        public JsonElement serialize(Description description, Type type,
-                JsonSerializationContext jsonSerializationContext) {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.add("display_name", new JsonPrimitive(description.getDisplayName()));
+    @Override
+    public JsonElement serialize(Description description, Type type,
+        JsonSerializationContext jsonSerializationContext) {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("display_name", new JsonPrimitive(description.getDisplayName()));
 
-                ArrayList<Description> subDescription = description.getChildren();
+        ArrayList<Description> subDescription = description.getChildren();
 
-                JsonArray array = new JsonArray();
-                for (Description desc : subDescription) {
-                        array.add(serialize(desc, null, null));
-                }
-
-                jsonObject.add("sub_description", array);
-
-                return jsonObject;
+        JsonArray array = new JsonArray();
+        for (Description desc : subDescription) {
+            array.add(serialize(desc, null, null));
         }
 
-        @Override
-        public Description deserialize(JsonElement jsonElement, Type type,
-                JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-                JsonObject jsonObject = jsonElement.getAsJsonObject();
-                String displayName = jsonObject.get("display_name").getAsString();
-                Description description = Description.createSuiteDescription(displayName);
+        jsonObject.add("sub_description", array);
 
-                JsonArray array = jsonObject.getAsJsonArray("sub_description");
+        return jsonObject;
+    }
 
-                for (JsonElement e : array) {
-                        description.addChild(deserialize(e, null, null));
-                }
-                return description;
+    @Override
+    public Description deserialize(JsonElement jsonElement, Type type,
+        JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        String displayName = jsonObject.get("display_name").getAsString();
+        Description description = Description.createSuiteDescription(displayName);
+
+        JsonArray array = jsonObject.getAsJsonArray("sub_description");
+
+        for (JsonElement e : array) {
+            description.addChild(deserialize(e, null, null));
         }
+        return description;
+    }
 }
