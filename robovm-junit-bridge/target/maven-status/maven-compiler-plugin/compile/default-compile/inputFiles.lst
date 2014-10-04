@@ -1,0 +1,9 @@
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/listener/RoboTestListener.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/Logger.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/runner/TestRunner.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/adapters/DescriptionTypeAdapter.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/adapters/ResultTypeAdapter.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/adapters/ThrowableTypeAdapter.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/ResultObject.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/internal/adapters/AtomicIntegerTypeAdapter.java
+/Users/ash/IdeaProjects/robovm-maven-surefire-provider/robovm-junit-bridge/src/main/java/org/robovm/devicebridge/RoboVMDeviceBridge.java
