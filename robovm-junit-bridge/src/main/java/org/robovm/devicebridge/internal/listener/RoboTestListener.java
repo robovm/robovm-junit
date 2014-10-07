@@ -16,13 +16,11 @@
 package org.robovm.devicebridge.internal.listener;
 
 import com.google.gson.GsonBuilder;
-import org.apache.maven.surefire.report.RunListener;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.robovm.apple.foundation.Foundation;
 import org.robovm.devicebridge.ResultObject;
-import org.robovm.devicebridge.internal.Logger;
 import org.robovm.devicebridge.internal.adapters.AtomicIntegerTypeAdapter;
 import org.robovm.devicebridge.internal.adapters.DescriptionTypeAdapter;
 import org.robovm.devicebridge.internal.adapters.ThrowableTypeAdapter;

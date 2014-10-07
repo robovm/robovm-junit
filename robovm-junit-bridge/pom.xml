@@ -96,13 +96,14 @@
     </dependencies>
 
     <build>
+
         <plugins>
             <plugin>
                 <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
                 <artifactId>maven-java-formatter-plugin</artifactId>
                 <version>0.4</version>
                 <configuration>
-                    <configFile>formatter.xml</configFile>
+                    <configFile>${project.basedir}/formatter.xml</configFile>
                 </configuration>
             </plugin>
             <plugin>
