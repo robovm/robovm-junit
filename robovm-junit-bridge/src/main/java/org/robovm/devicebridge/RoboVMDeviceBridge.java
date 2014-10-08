@@ -55,20 +55,20 @@ public class RoboVMDeviceBridge {
 
                 int connectionCount = 8;
 
-                while (true) {
+                for (int i=0;i<connectionCount;i++) {
                     try {
-                        System.out.println("Trying to contact device...");
+                        System.out.print("Trying to contact device...");
                         socket = new Socket(hostname, PORT);
                         break;
                     } catch (IOException e) {
-                        System.out.print("sleeping for retry");
+                        System.out.println("sleeping for retry\n");
                         try {
                             if (connectionCount <= 0) {
                                 subscriber.onError(new RuntimeException(
                                         "Connection to device failed, check device logs for failure reason"));
+                                subscriber.onCompleted();
                                 return;
                             }
-                            connectionCount--;
                             Thread.sleep(8000);
                         } catch (InterruptedException e1) {
                             e1.printStackTrace();
@@ -100,10 +100,11 @@ public class RoboVMDeviceBridge {
                                 }
                             }
                         }
+                        subscriber.onCompleted();
 
                         writer.close();
                         socket.close();
-                        subscriber.onCompleted();
+
                     }
                 } catch (IOException ie) {
                     subscriber.onError(ie);
