@@ -13,60 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.robovm.devicebridge.internal.listener;
+package org.robovm.surefire;
 
-import com.google.gson.GsonBuilder;
 import org.apache.maven.surefire.report.RunListener;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.robovm.apple.foundation.Foundation;
-import org.robovm.devicebridge.ResultObject;
-import org.robovm.devicebridge.internal.Logger;
-import org.robovm.devicebridge.internal.adapters.AtomicIntegerTypeAdapter;
-import org.robovm.devicebridge.internal.adapters.DescriptionTypeAdapter;
-import org.robovm.devicebridge.internal.adapters.ThrowableTypeAdapter;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.robovm.devicebridge.ResultObject.*;
+import static org.robovm.surefire.internal.Constant.TEST_IGNORED;
+import static org.robovm.surefire.internal.Constant.TEST_RUN_STARTED;
+import static org.robovm.surefire.internal.Constant.TEST_RUN_FINISHED;
+import static org.robovm.surefire.internal.Constant.TEST_STARTED;
+import static org.robovm.surefire.internal.Constant.TEST_FINISHED;
+import static org.robovm.surefire.internal.Constant.TEST_FAILURE;
 
-/**
- * JUnit RunListener which sends results via an output stream (eg. socket) to a
- * listening instance (eg. surefire provider)
- */
 public class RoboTestListener extends org.junit.runner.notification.RunListener {
 
-    private OutputStream out;
+    private final RunListener reporter;
 
+    private IOSSimulatorBridge iosSimulatorBridge;
     private static ArrayList<String> failedTests = new ArrayList<String>();
 
-    public RoboTestListener(OutputStream out) {
-        this.out = out;
+    public RoboTestListener(RunListener reporter, String host, String port) throws IOException {
+        this.reporter = reporter;
+        iosSimulatorBridge = new IOSSimulatorBridge();
+        iosSimulatorBridge.initiateConnectionToHost(host, port);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
-        sendToHost(TEST_IGNORED, createDescriptionResult(description, TEST_IGNORED));
+        iosSimulatorBridge.sendToHost(TEST_IGNORED, createDescriptionResult(description, TEST_IGNORED));
     }
 
     @Override
     public void testRunStarted(Description description) throws Exception {
-        sendToHost(TEST_RUN_STARTED, createDescriptionResult(description, TEST_RUN_STARTED));
+        iosSimulatorBridge.sendToHost(TEST_RUN_STARTED, createDescriptionResult(description, TEST_RUN_STARTED));
     }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        sendToHost(TEST_RUN_FINISHED, createResultResult(result, TEST_RUN_FINISHED));
+        iosSimulatorBridge.sendToHost(TEST_RUN_FINISHED, createResultResult(result, TEST_RUN_FINISHED));
     }
 
     @Override
     public void testStarted(Description description) throws Exception {
-        sendToHost(TEST_STARTED, createDescriptionResult(description, TEST_STARTED));
+        iosSimulatorBridge.sendToHost(TEST_STARTED, createDescriptionResult(description, TEST_STARTED));
     }
 
     @Override
@@ -76,13 +70,13 @@ public class RoboTestListener extends org.junit.runner.notification.RunListener 
                 return;
             }
         }
-        sendToHost(TEST_FINISHED, createDescriptionResult(description, TEST_FINISHED));
+        iosSimulatorBridge.sendToHost(TEST_FINISHED, createDescriptionResult(description, TEST_FINISHED));
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
         failedTests.add(failure.getDescription().getDisplayName());
-        sendToHost(TEST_FAILURE, createFailureResult(failure, TEST_FAILURE));
+        iosSimulatorBridge.sendToHost(TEST_FAILURE, createFailureResult(failure, TEST_FAILURE));
     }
 
     private ResultObject createFailureResult(Failure failure, int type) {
@@ -104,36 +98,6 @@ public class RoboTestListener extends org.junit.runner.notification.RunListener 
         resultObject.setResult(result);
         resultObject.setResultType(type);
         return resultObject;
-    }
-
-    public void sendToHost(int type, ResultObject message) {
-
-        try {
-            transmit(message);
-        } catch (Exception e) {
-            Foundation.log("Can't send result " + type + " - " + e.getMessage());
-            for (StackTraceElement stackTraceElement : e.getStackTrace()) {
-                Foundation.log("\t" + stackTraceElement.toString());
-            }
-            e.printStackTrace();
-        }
-
-    }
-
-    private void transmit(ResultObject message) throws IOException, InterruptedException {
-
-        PrintWriter writer;
-
-        String transmitMessage = new GsonBuilder()
-                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new DescriptionTypeAdapter.FailureTypeAdapter())
-                .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
-                .create().toJson(message);
-
-        writer = new PrintWriter(out, true);
-        writer.println(transmitMessage);
-        writer.flush();
     }
 
 }

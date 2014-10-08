@@ -1,4 +1,6 @@
 *.class
-*.iml
+
+robovm-surefire-provider.iml
 /target
+
 .*
