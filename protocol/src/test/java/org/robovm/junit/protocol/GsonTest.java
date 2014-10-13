@@ -1,17 +1,15 @@
-package org.robovm.junitbridge;
+package org.robovm.junit.protocol;
 
-import com.google.gson.GsonBuilder;
+import static org.junit.Assert.*;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.robovm.devicebridge.ResultObject;
-import org.robovm.devicebridge.internal.adapters.AtomicIntegerTypeAdapter;
-import org.robovm.devicebridge.internal.adapters.DescriptionTypeAdapter;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.assertTrue;
+import com.google.gson.GsonBuilder;
 
 public class GsonTest {
 
@@ -26,7 +24,7 @@ public class GsonTest {
         resultObject.setResult(new Result());
         resultObject.setDescription(description);
         resultObject.setFailure(
-                new Failure(Description.createSuiteDescription("test"), new RuntimeException("error")));
+                new Failure(Description.createSuiteDescription("test"), new RuntimeException()));
 
         String jsonString = new GsonBuilder()
                 .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())

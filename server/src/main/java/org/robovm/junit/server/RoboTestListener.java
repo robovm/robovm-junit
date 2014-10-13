@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.robovm.devicebridge.internal.listener;
+package org.robovm.junit.server;
 
-import com.google.gson.GsonBuilder;
-import org.apache.maven.surefire.report.RunListener;
-import org.junit.runner.Description;
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-import org.robovm.apple.foundation.Foundation;
-import org.robovm.devicebridge.ResultObject;
-import org.robovm.devicebridge.internal.Logger;
-import org.robovm.devicebridge.internal.adapters.AtomicIntegerTypeAdapter;
-import org.robovm.devicebridge.internal.adapters.DescriptionTypeAdapter;
-import org.robovm.devicebridge.internal.adapters.ThrowableTypeAdapter;
+import static org.robovm.junit.protocol.ResultObject.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,7 +23,15 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.robovm.devicebridge.ResultObject.*;
+import org.junit.runner.Description;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
+import org.robovm.junit.protocol.AtomicIntegerTypeAdapter;
+import org.robovm.junit.protocol.DescriptionTypeAdapter;
+import org.robovm.junit.protocol.ResultObject;
+import org.robovm.junit.protocol.ThrowableTypeAdapter;
+
+import com.google.gson.GsonBuilder;
 
 /**
  * JUnit RunListener which sends results via an output stream (eg. socket) to a
@@ -111,11 +109,9 @@ public class RoboTestListener extends org.junit.runner.notification.RunListener 
         try {
             transmit(message);
         } catch (Exception e) {
-            Foundation.log("Can't send result " + type + " - " + e.getMessage());
-            for (StackTraceElement stackTraceElement : e.getStackTrace()) {
-                Foundation.log("\t" + stackTraceElement.toString());
-            }
-            e.printStackTrace();
+            // Lost connection to host for some reason. We cannot recover from
+            // this in any way.
+            throw new Error(e);
         }
 
     }

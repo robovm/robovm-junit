@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.robovm.devicebridge.internal.adapters;
+package org.robovm.junit.protocol;
 
 import com.google.gson.*;
 import org.junit.runner.Description;
@@ -63,7 +63,6 @@ public class DescriptionTypeAdapter implements JsonDeserializer<Description>, Js
         public JsonElement serialize(Failure failure, Type type, JsonSerializationContext jsonSerializationContext) {
             JsonObject jsonObject = new JsonObject();
 
-            jsonObject.add("message", new JsonPrimitive(failure.getMessage()));
             jsonObject.add("description",
                     new DescriptionTypeAdapter().serialize(failure.getDescription(), null, null));
             jsonObject.add("exception", new ThrowableTypeAdapter().serialize(failure.getException(), null, null));

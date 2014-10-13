@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.robovm.devicebridge.internal.adapters;
+package org.robovm.junit.protocol;
 
 import com.google.gson.*;
 

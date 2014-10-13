@@ -14,15 +14,24 @@
  * limitations under the License.
  *
  */
-package org.robovm.devicebridge.internal.adapters;
+package org.robovm.junit.protocol;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Type;
 
 import biz.source_code.base64Coder.Base64Coder;
-import com.google.gson.*;
-import org.robovm.apple.foundation.Foundation;
-import org.robovm.devicebridge.internal.Logger;
 
-import java.io.*;
-import java.lang.reflect.Type;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 /**
  * Serialization class for exceptions
@@ -35,8 +44,6 @@ public class ThrowableTypeAdapter implements JsonSerializer<Throwable>, JsonDese
         JsonObject jsonObject = new JsonObject();
         String throwableString = null;
 
-        Logger.log("Serializing " + throwable.getMessage());
-
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
@@ -44,8 +51,7 @@ public class ThrowableTypeAdapter implements JsonSerializer<Throwable>, JsonDese
             outputStream.flush();
             throwableString = new String(Base64Coder.encode(byteStream.toByteArray()));
         } catch (IOException e) {
-            Logger.log("Error serializing JSON " + e.getMessage());
-            e.printStackTrace();
+            throw new Error(e);
         }
 
         jsonObject.addProperty("throwableObject", throwableString);

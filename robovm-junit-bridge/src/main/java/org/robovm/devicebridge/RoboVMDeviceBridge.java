@@ -16,64 +16,69 @@
 
 package org.robovm.devicebridge;
 
-import com.google.gson.GsonBuilder;
-import org.apache.maven.plugin.MojoExecutionException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.commons.io.IOUtils;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.robovm.compiler.AppCompiler;
-import org.robovm.compiler.Version;
+import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
+import org.robovm.compiler.plugin.LaunchPlugin;
 import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.compilerhelper.RoboVMResolver;
-import org.robovm.devicebridge.internal.Logger;
-import org.robovm.devicebridge.internal.adapters.AtomicIntegerTypeAdapter;
-import org.robovm.devicebridge.internal.adapters.DescriptionTypeAdapter;
-import org.robovm.devicebridge.internal.runner.TestRunner;
+import org.robovm.compiler.util.io.Fifos;
+import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
+import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
+import org.robovm.junit.protocol.AtomicIntegerTypeAdapter;
+import org.robovm.junit.protocol.DescriptionTypeAdapter;
+import org.robovm.junit.protocol.ResultObject;
+
 import rx.Observable;
 import rx.Subscriber;
 
-import java.io.*;
-import java.net.Socket;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.gson.GsonBuilder;
 
 /**
  * Bridge between device and client (IDE, gradle, maven...)
  */
 public class RoboVMDeviceBridge {
 
+    private static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
+
     private Socket socket;
-    private int PORT = 8889;
     private String LOAD = "load";
+    private Process process;
+    private ServerPortReader serverPortReader;
 
     public RoboVMDeviceBridge() {
     }
 
-    public Observable<ResultObject> runTestsOnDevice(final String hostname, final String[] testsToRun) {
+    public Observable<ResultObject> runTests(final Config config, final String[] testsToRun) {
         return Observable.create(new Observable.OnSubscribe<ResultObject>() {
             @Override
             public void call(Subscriber<? super ResultObject> subscriber) {
 
-                int connectionCount = 8;
-
-                for (int i=0;i<connectionCount;i++) {
-                    try {
-                        System.out.print("Trying to contact device...");
-                        socket = new Socket(hostname, PORT);
-                        break;
-                    } catch (IOException e) {
-                        System.out.println("sleeping for retry\n");
-                        try {
-                            if (connectionCount <= 0) {
-                                subscriber.onError(new RuntimeException(
-                                        "Connection to device failed, check device logs for failure reason"));
-                                subscriber.onCompleted();
-                                return;
-                            }
-                            Thread.sleep(8000);
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
-                        }
+                try {
+                    config.getLogger().debug("Trying to connect to test server running on port %d", serverPortReader.port);
+                    socket = new Socket("localhost", serverPortReader.port);
+                } catch (IOException e) {
+                    if (config.getOs() == OS.ios && config.getArch() == Arch.thumbv7) {
+                        subscriber.onError(new RuntimeException(
+                                "Connection to device failed, check device logs for failure reason"));
+                    } else {
+                        subscriber.onError(new RuntimeException(
+                                "Connection to test server failed"));
                     }
+                    subscriber.onCompleted();
                 }
 
                 int test = 0;
@@ -90,7 +95,6 @@ public class RoboVMDeviceBridge {
                             writer.flush();
 
                             while ((line = reader.readLine()) != null) {
-                                Logger.log("Read from socket " + line);
                                 ResultObject resultObject = jsonToResultObject(line);
                                 if (!subscriber.isUnsubscribed()) {
                                     subscriber.onNext(resultObject);
@@ -104,7 +108,6 @@ public class RoboVMDeviceBridge {
 
                         writer.close();
                         socket.close();
-
                     }
                 } catch (IOException ie) {
                     subscriber.onError(ie);
@@ -124,66 +127,157 @@ public class RoboVMDeviceBridge {
         return resultObject;
     }
 
-    public Config compile(Config.Builder configBuilder) throws IOException, MojoExecutionException {
+    public Config compile(Config.Builder configBuilder) throws IOException {
 
         if (configBuilder == null) {
             throw new IllegalArgumentException("RoboVM configuration cannot be null");
         }
 
-        configBuilder = mergeInJUnitDefaults(configBuilder);
-
-        Logger.log("Building Runner");
-
-        configBuilder.home(new Config.Home(getRoboVMHome()));
+        configBuilder.mainClass(SERVER_CLASS_NAME);
+        configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLProvider");
+        configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLMessageDigestJDK**");
+        
         Config config = configBuilder.build();
+        config.getLogger().info("Building test runner");
         new AppCompiler(config).compile();
 
         return config;
     }
 
-    public void run(Config config) {
+    public void start(Config config, LaunchParameters launchParameters) throws IOException {
+        if (process != null) {
+            throw new IllegalStateException("Already started");
+        }
+        ArrayList<String> args = new ArrayList<>(launchParameters.getArguments());
+        args.add("-rvm:log=fatal");
+        launchParameters.setArguments(args);
+        
+        for (LaunchPlugin plugin : config.getLaunchPlugins()) {
+            plugin.beforeLaunch(config, launchParameters);
+        }
+        
+        File oldStdErr = launchParameters.getStderrFifo();
+        File newStdErr = Fifos.mkfifo("junit-err-proxy");
+        launchParameters.setStderrFifo(newStdErr);
+        
         try {
-            Logger.log("Launching Simulator");
-            LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
-            config.getTarget().launch(launchParameters).waitFor();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            process = config.getTarget().launch(launchParameters);
+            serverPortReader = new ServerPortReader(config, launchParameters, process, oldStdErr, newStdErr);
+            for (LaunchPlugin plugin : config.getLaunchPlugins()) {
+                plugin.afterLaunch(config, launchParameters, process);
+            }
+            
+            while (!serverPortReader.stopped && serverPortReader.port == -1) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                }
+            }
+
+            // process stopped without providing a port
+            if (serverPortReader.port == -1) {
+                throw new IOException("Process stopped prematurely");
+            }
+            
+        } catch (Throwable e) {
+            for (LaunchPlugin plugin : config.getLaunchPlugins()) {
+                plugin.launchFailed(config, launchParameters);
+            }
+            if (e instanceof IOException) {
+                throw (IOException) e;
+            } else if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    public void close() {
+    public void stop() {
+        if (process == null) {
+            throw new IllegalStateException("Not started");
+        }
+
+        if (serverPortReader != null) {
+            serverPortReader.running = false;
+            serverPortReader.thread.interrupt();
+            serverPortReader = null;            
+        }
+        
         try {
+            process.waitFor();
+            process.destroy();
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
         }
     }
+    
+    /**
+     * Wraps the error stream of the runner and reads the port which the runner 
+     * will be print to stderr. Will continue to wrap the error stream until the 
+     * runner process has finished.
+     */
+    private static class ServerPortReader {
+        volatile boolean running = false;
+        volatile boolean stopped = false;
+        volatile int port = -1;
+        Thread thread;
+        volatile boolean closeOutOnExit = true;
 
-    private Config.Builder mergeInJUnitDefaults(Config.Builder configBuilder) {
+        public ServerPortReader(final Config config, final LaunchParameters params, final Process process,
+                final File oldStdError, final File newStdError) throws IOException {
 
-        RoboVMResolver resolver = new RoboVMResolver();
+            final BufferedReader in = new BufferedReader(new InputStreamReader(new OpenOnReadFileInputStream(newStdError)));
+            BufferedWriter writer = null;
+            if (oldStdError != null) {
+                writer = new BufferedWriter(new OutputStreamWriter(new OpenOnWriteFileOutputStream(oldStdError)));
+            } else {
+                writer = new BufferedWriter(new OutputStreamWriter(System.err));
+                closeOutOnExit = false;
+            }
+            final BufferedWriter out = writer;
 
-        /* add classpath entries */
-        configBuilder
-                .addClasspathEntry(resolver.resolveArtifact("org.robovm:robovm-cocoatouch:" + Version.getVersion()));
-        configBuilder.addClasspathEntry(resolver.resolveArtifact("org.robovm:robovm-objc:" + Version.getVersion()));
-        configBuilder.addClasspathEntry(resolver.resolveArtifact("junit:junit:4.4"));
-        configBuilder.addClasspathEntry(resolver.resolveArtifact("com.google.code.gson:gson:2.2.4"));
-        configBuilder.addClasspathEntry(resolver.resolveArtifact("biz.source_code:base64coder:2010-12-19"));
-        configBuilder.addClasspathEntry(resolver.resolveArtifact("org.apache.maven.surefire:surefire-api:2.17"));
-        configBuilder.addClasspathEntry(resolver.resolveArtifact("com.netflix.rxjava:rxjava-core:0.18.4"));
+            thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        running = true;
+                        while (running && !isProcessStopped(process)) {
+                            String line = in.readLine();
+                            if (line != null) {
+                                if (line.startsWith(SERVER_CLASS_NAME + ": port=")) {
+                                    port = Integer.parseInt(line.split("=")[1]);
+                                    config.getLogger().debug("Test runner port: " + port);
+                                } else {
+                                    out.write(line + "\n");
+                                    out.flush();
+                                }
+                            }
+                        }
+                    } catch (Throwable t) {
+                        config.getLogger().error("Couldn't forward error stream", t.getMessage());
+                    } finally {
+                        if (closeOutOnExit) {
+                            IOUtils.closeQuietly(out);
+                        }
+                        IOUtils.closeQuietly(in);
+                        stopped = true;
+                    }
+                }
 
-        configBuilder.mainClass(TestRunner.class.getCanonicalName());
-
-        return configBuilder;
-    }
-
-    public File getRoboVMHome() throws IOException, MojoExecutionException {
-        RoboVMResolver resolver = new RoboVMResolver();
-        File compilerFile = resolver.resolveRoboVMCompilerArtifact();
-        File unpackDir = resolver.unpackInPlace(compilerFile);
-        return new File(unpackDir, "robovm-" + Version.getVersion());
+                private boolean isProcessStopped(Process process) {
+                    try {
+                        process.exitValue();
+                        return true;
+                    } catch (IllegalThreadStateException e) {
+                        return false;
+                    }
+                }
+            });
+            thread.setName("JUnit Port Reader");
+            thread.setDaemon(true);
+            thread.start();
+        }
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.robovm.devicebridge;
+package org.robovm.junit.protocol;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
