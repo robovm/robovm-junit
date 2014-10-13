@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.robovm.junitbridge;
+package org.robovm.junit.client;
 
 import static org.junit.Assert.*;
 
@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.devicebridge.RoboVMDeviceBridge;
 import org.robovm.junit.protocol.ResultObject;
 
 import rx.observables.BlockingObservable;

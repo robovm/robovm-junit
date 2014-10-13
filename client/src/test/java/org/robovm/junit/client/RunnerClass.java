@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.robovm.junitbridge;
+package org.robovm.junit.client;
 
 import static org.junit.Assert.*;
 

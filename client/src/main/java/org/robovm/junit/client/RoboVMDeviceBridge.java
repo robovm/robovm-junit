@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.robovm.devicebridge;
+package org.robovm.junit.client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
