@@ -93,8 +93,8 @@
     </build>
 
     <modules>
-        <module>robovm-junit-bridge</module>
         <module>protocol</module>
+        <module>client</module>
         <module>server</module>
         <module>robovm-resolver</module>
     </modules>
