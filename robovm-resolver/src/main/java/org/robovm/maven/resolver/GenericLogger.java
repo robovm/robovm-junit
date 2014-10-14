@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.robovm.compilerhelper;
+package org.robovm.maven.resolver;
 
 public class GenericLogger implements Logger {
 

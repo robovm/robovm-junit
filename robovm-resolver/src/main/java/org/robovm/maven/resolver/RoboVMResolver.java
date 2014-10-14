@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.robovm.compilerhelper;
+package org.robovm.maven.resolver;
 
 import java.io.File;
 import java.io.IOException;

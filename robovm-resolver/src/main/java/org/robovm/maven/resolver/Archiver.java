@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.robovm.compilerhelper;
+package org.robovm.maven.resolver;
 
 import java.io.File;
 import java.io.FileInputStream;
