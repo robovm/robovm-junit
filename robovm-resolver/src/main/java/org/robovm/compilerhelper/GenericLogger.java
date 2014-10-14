@@ -16,7 +16,7 @@
 
 package org.robovm.compilerhelper;
 
-public class GenericLogger {
+public class GenericLogger implements Logger {
 
     public void debug(String logLine) {
         System.out.println("DEBUG: " + logLine);

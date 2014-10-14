@@ -17,6 +17,7 @@
     <dependency>
       <groupId>org.robovm</groupId>
       <artifactId>robovm-rt</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.robovm</groupId>
@@ -28,5 +29,51 @@
       <artifactId>rxjava-core</artifactId>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>false</shadedArtifactAttached>
+              <relocations>
+                <relocation>
+                  <pattern>rx</pattern>
+                  <shadedPattern>org.robovm.junit.rx</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.gson</pattern>
+                  <shadedPattern>org.robovm.junit.com.google.gson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>biz.source_code.base64Coder</pattern>
+                  <shadedPattern>org.robovm.junit.biz.source_code.base64Coder</shadedPattern>
+                </relocation>
+              </relocations>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/NOTICE.txt</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

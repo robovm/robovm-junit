@@ -13,48 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.robovm.compilerhelper;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+class Archiver {
 
-public class Archiver {
-
-    public static void unarchive(File archiveFile, File destinationDirectory) throws IOException {
-
-        TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(new BufferedInputStream(
-                new FileInputStream(archiveFile))));
-
-        destinationDirectory.mkdirs();
-        TarArchiveEntry entry = tar.getNextTarEntry();
-        while (entry != null) {
-            File f = new File(destinationDirectory, entry.getName());
-            if (entry.isDirectory()) {
-                f.mkdirs();
-                entry = tar.getNextTarEntry();
-                continue;
+    public static void unarchive(Logger logger, File archive, File destDir) throws IOException {
+        TarArchiveInputStream in = null;
+        try {
+            in = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(archive)));
+            ArchiveEntry entry = null;
+            while ((entry = in.getNextEntry()) != null) {
+                File f = new File(destDir, entry.getName());
+                if (entry.isDirectory()) {
+                    f.mkdirs();
+                } else {
+                    logger.debug(f.getAbsolutePath());
+                    f.getParentFile().mkdirs();
+                    OutputStream out = null;
+                    try {
+                        out = new FileOutputStream(f);
+                        IOUtils.copy(in, out);
+                    } finally {
+                        IOUtils.closeQuietly(out);
+                    }
+                }
+                f.setLastModified(entry.getLastModifiedDate().getTime());
+                if (entry instanceof TarArchiveEntry) {
+                    int mode = ((TarArchiveEntry) entry).getMode();
+                    if ((mode & 00100) > 0) {
+                        // Preserve execute permissions
+                        f.setExecutable(true, (mode & 00001) == 0);
+                    }
+                }
             }
-
-            String parentDir = f.getPath();
-            if (parentDir != null) {
-                new File(parentDir.substring(0, parentDir.lastIndexOf(File.separator))).mkdirs();
-            }
-
-            f.createNewFile();
-            byte[] bytes = new byte[1024];
-            int count;
-            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
-            while ((count = tar.read(bytes)) > 0) {
-                out.write(bytes, 0, count);
-            }
-            out.flush();
-            out.close();
-
-            entry = tar.getNextTarEntry();
+        } finally {
+            IOUtils.closeQuietly(in);
         }
     }
+    
 }

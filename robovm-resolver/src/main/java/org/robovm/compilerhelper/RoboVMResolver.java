@@ -16,58 +16,69 @@
 
 package org.robovm.compilerhelper;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.jboss.shrinkwrap.resolver.api.NoResolvedResultException;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.robovm.compiler.Version;
-
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
+import org.jboss.shrinkwrap.resolver.api.NoResolvedResultException;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
+
 public class RoboVMResolver {
 
-    private static String ROBOVM_DIST = "org.robovm:robovm-dist:tar.gz:" + getRoboVMVersion();
+    private static String ROBOVM_DIST = "org.robovm:robovm-dist:tar.gz:nocompiler";
 
-    public static String getRoboVMVersion() {
-        return Version.getVersion();
+    private Logger logger = new GenericLogger();
+    
+    public void setLogger(Logger logger) {
+        this.logger = logger;
     }
 
-    public File resolveArtifact(String artifact) {
-        File f;
+    public MavenResolvedArtifact resolveArtifact(String artifact) {
         try {
             /* do offline check first */
-            f = Maven.configureResolver().workOffline().resolve(artifact).withoutTransitivity().asSingleFile();
+            return Maven.configureResolver().workOffline().resolve(artifact).withoutTransitivity().asSingleResolvedArtifact();
         } catch (NoResolvedResultException nre) {
-            f = Maven
+            return Maven
                     .configureResolver()
                     .withRemoteRepo("Sonatype Nexus Snapshots",
                             "https://oss.sonatype.org/content/repositories/snapshots/", "default")
-                    .resolve(artifact).withoutTransitivity().asSingleFile();
+                    .resolve(artifact).withoutTransitivity().asSingleResolvedArtifact();
         }
-        return f;
     }
 
-    public File[] resolveArtifacts(String artifact) {
-        File[] f;
+    public MavenResolvedArtifact[] resolveArtifacts(String artifact) {
         try {
             /* do offline check first */
-            f = Maven.configureResolver().workOffline().resolve(artifact).withTransitivity().asFile();
+            return Maven.configureResolver().workOffline().resolve(artifact).withTransitivity().asResolvedArtifact();
         } catch (NoResolvedResultException nre) {
-            f = Maven
+            return Maven
                     .configureResolver()
                     .withRemoteRepo("Sonatype Nexus Snapshots",
                             "https://oss.sonatype.org/content/repositories/snapshots/", "default")
-                    .resolve(artifact).withTransitivity().asFile();
+                    .resolve(artifact).withTransitivity().asResolvedArtifact();
         }
-        return f;
     }
 
-    public File resolveRoboVMCompilerArtifact() {
-        return resolveArtifact(ROBOVM_DIST);
+    public MavenResolvedArtifact resolveRoboVMDistArtifact(String version) {
+        return resolveArtifact(ROBOVM_DIST + ":" + version);
     }
 
-    private GenericLogger getLog() {
-        return new GenericLogger();
+    public File resolveAndUnpackRoboVMDistArtifact(String version) throws IOException {
+        MavenResolvedArtifact distTarArtifact = resolveRoboVMDistArtifact(version);
+        File distTarFile = distTarArtifact.asFile();
+        File unpackBaseDir = new File(distTarFile.getParent(), "unpacked");
+        if (unpackBaseDir.exists() && distTarArtifact.isSnapshotVersion()) {
+            getLog().debug("Deleting directory for unpacked snapshots: " + unpackBaseDir);
+            FileUtils.deleteDirectory(unpackBaseDir);
+        }
+        unpack(distTarFile, unpackBaseDir);
+        File unpackedDir = new File(unpackBaseDir, "robovm-" + version);
+        return unpackedDir;
+    }
+    
+    private Logger getLog() {
+        return logger;
     }
 
     public File unpack(File archive, File targetDirectory)
@@ -82,7 +93,7 @@ public class RoboVMResolver {
                                 + targetDirectory);
             }
 
-            Archiver.unarchive(archive, targetDirectory);
+            Archiver.unarchive(getLog(), archive, targetDirectory);
         } else {
             getLog().debug(
                     "Archive '" + archive + "' was already unpacked in: "
@@ -92,7 +103,7 @@ public class RoboVMResolver {
         return targetDirectory;
     }
 
-    public File unpackInPlace(File jarFile) throws MojoExecutionException, IOException {
+    public File unpackInPlace(File jarFile) throws IOException {
         File unpackDir = new File(jarFile.getParent(), "unpacked");
         return unpack(jarFile, unpackDir);
     }
