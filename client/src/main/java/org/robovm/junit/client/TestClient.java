@@ -43,7 +43,7 @@ import rx.Subscriber;
 /**
  * Bridge between device and client (IDE, gradle, maven...)
  */
-public class RoboVMDeviceBridge {
+public class TestClient {
 
     private static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
 
@@ -52,7 +52,7 @@ public class RoboVMDeviceBridge {
     private Process process;
     private ServerPortReader serverPortReader;
 
-    public RoboVMDeviceBridge() {
+    public TestClient() {
     }
 
     public Observable<ResultObject> runTests(final Config config, final String[] testsToRun) {

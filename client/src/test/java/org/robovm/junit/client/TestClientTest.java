@@ -40,9 +40,9 @@ import org.robovm.maven.resolver.RoboVMResolver;
 import rx.observables.BlockingObservable;
 
 /**
- * Tests {@link RoboVMDeviceBridge}.
+ * Tests {@link TestClient}.
  */
-public class RoboVMDeviceBridgeTest {
+public class TestClientTest {
 
     @Test
     public void testSuccessfulWholeClassRunOutsideOfRoboVM() throws Exception {
@@ -72,13 +72,13 @@ public class RoboVMDeviceBridgeTest {
     
     @Test
     public void testSuccessfulWholeClassRun() throws Exception {
-        RoboVMDeviceBridge roboVMDeviceBridge = new RoboVMDeviceBridge();
-        Config config = roboVMDeviceBridge.compile(createConfig());
+        TestClient client = new TestClient();
+        Config config = client.compile(createConfig());
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
-        roboVMDeviceBridge.start(config, launchParameters);
+        client.start(config, launchParameters);
         
-        BlockingObservable<ResultObject> blockingObservable = BlockingObservable.from(roboVMDeviceBridge
+        BlockingObservable<ResultObject> blockingObservable = BlockingObservable.from(client
                 .runTests(config, new String[] { RunnerClass.class.getName() }));
         List<String>  successfulTests = new ArrayList<>();
         List<String> failedTests = new ArrayList<>();
@@ -99,18 +99,18 @@ public class RoboVMDeviceBridgeTest {
         assertEquals("1 failed test expected", 1, failedTests.size());
         assertTrue(failedTests.contains("testShouldFail(" + RunnerClass.class.getName() + "): null"));
 
-        roboVMDeviceBridge.stop();
+        client.stop();
     }
 
     @Test
     public void testSuccessfulSingleMethodRun() throws Exception {
-        RoboVMDeviceBridge roboVMDeviceBridge = new RoboVMDeviceBridge();
-        Config config = roboVMDeviceBridge.compile(createConfig());
+        TestClient client = new TestClient();
+        Config config = client.compile(createConfig());
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
-        roboVMDeviceBridge.start(config, launchParameters);
+        client.start(config, launchParameters);
 
-        BlockingObservable<ResultObject> blockingObservable = BlockingObservable.from(roboVMDeviceBridge
+        BlockingObservable<ResultObject> blockingObservable = BlockingObservable.from(client
                 .runTests(config, new String[] { RunnerClass.class.getName() + "#testSuccessfulTest1" }));
         List<String>  successfulTests = new ArrayList<>();
         List<String> failedTests = new ArrayList<>();
@@ -129,7 +129,7 @@ public class RoboVMDeviceBridgeTest {
         assertTrue(successfulTests.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
         assertEquals("0 failed tests expected", 0, failedTests.size());
 
-        roboVMDeviceBridge.stop();
+        client.stop();
     }
     
     private Config.Builder createConfig() throws IOException, ClassNotFoundException {
