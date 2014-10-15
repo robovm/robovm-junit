@@ -41,7 +41,8 @@ import rx.Observable;
 import rx.Subscriber;
 
 /**
- * Bridge between device and client (IDE, gradle, maven...)
+ * Client side of the bridge between the tester (IDE, Maven, Gradle, etc) and
+ * the testee (console, simulator, device).
  */
 public class TestClient {
 

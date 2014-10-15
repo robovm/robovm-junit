@@ -33,7 +33,9 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 
 /**
- * Main TestRunner class run on the device/simulator
+ * Server side of the bridge between the tester (IDE, Maven, Gradle, etc) and
+ * the testee (console, simulator, device). This code runs inside RoboVM and
+ * will be bundled with the test classes into an executable.
  */
 public class TestServer {
     public static final String DEBUG = "robovm.debug";
