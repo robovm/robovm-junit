@@ -26,12 +26,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.robovm.junit.deps.com.google.gson.GsonBuilder;
 import org.robovm.junit.protocol.AtomicIntegerTypeAdapter;
 import org.robovm.junit.protocol.DescriptionTypeAdapter;
+import org.robovm.junit.protocol.FailureTypeAdapter;
 import org.robovm.junit.protocol.ResultObject;
 import org.robovm.junit.protocol.ThrowableTypeAdapter;
-
-import com.google.gson.GsonBuilder;
 
 /**
  * JUnit RunListener which sends results via an output stream (eg. socket) to a
@@ -119,11 +119,11 @@ public class RoboTestListener extends org.junit.runner.notification.RunListener 
     private void transmit(ResultObject message) throws IOException, InterruptedException {
 
         PrintWriter writer;
-
+        
         String transmitMessage = new GsonBuilder()
                 .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
                 .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new DescriptionTypeAdapter.FailureTypeAdapter())
+                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
                 .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
                 .create().toJson(message);
 

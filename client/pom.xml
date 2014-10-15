@@ -34,6 +34,12 @@
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-maven-resolver</artifactId>
+      <version>${robovm.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>

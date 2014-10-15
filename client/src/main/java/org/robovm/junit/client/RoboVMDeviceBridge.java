@@ -24,11 +24,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.runner.Description;
-import org.junit.runner.notification.Failure;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
@@ -38,14 +35,10 @@ import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.compiler.util.io.Fifos;
 import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
 import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
-import org.robovm.junit.protocol.AtomicIntegerTypeAdapter;
-import org.robovm.junit.protocol.DescriptionTypeAdapter;
 import org.robovm.junit.protocol.ResultObject;
 
 import rx.Observable;
 import rx.Subscriber;
-
-import com.google.gson.GsonBuilder;
 
 /**
  * Bridge between device and client (IDE, gradle, maven...)
@@ -95,7 +88,7 @@ public class RoboVMDeviceBridge {
                             writer.flush();
 
                             while ((line = reader.readLine()) != null) {
-                                ResultObject resultObject = jsonToResultObject(line);
+                                ResultObject resultObject = ResultObject.fromJson(line);
                                 if (!subscriber.isUnsubscribed()) {
                                     subscriber.onNext(resultObject);
                                 }
@@ -114,17 +107,6 @@ public class RoboVMDeviceBridge {
                 }
             }
         });
-    }
-
-    private ResultObject jsonToResultObject(String jsonString) {
-        ResultObject resultObject = new GsonBuilder()
-                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new DescriptionTypeAdapter.FailureTypeAdapter())
-                .create()
-                .fromJson(jsonString, ResultObject.class);
-
-        return resultObject;
     }
 
     public Config compile(Config.Builder configBuilder) throws IOException {

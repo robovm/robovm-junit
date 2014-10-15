@@ -29,7 +29,7 @@ public class GsonTest {
         String jsonString = new GsonBuilder()
                 .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
                 .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new DescriptionTypeAdapter.FailureTypeAdapter())
+                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
                 .create()
                 .toJson(resultObject);
         assertTrue(jsonString != null);
@@ -37,7 +37,7 @@ public class GsonTest {
         ResultObject resultObject2 = new GsonBuilder()
                 .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
                 .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new DescriptionTypeAdapter.FailureTypeAdapter())
+                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
                 .create()
                 .fromJson(jsonString, ResultObject.class);
 

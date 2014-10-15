@@ -18,21 +18,58 @@ package org.robovm.junit.client;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Config.Home;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.junit.protocol.ResultObject;
+import org.robovm.junit.server.TestServer;
+import org.robovm.maven.resolver.RoboVMResolver;
 
 import rx.observables.BlockingObservable;
 
+/**
+ * Tests {@link RoboVMDeviceBridge}.
+ */
 public class RoboVMDeviceBridgeTest {
 
+    @Test
+    public void testSuccessfulWholeClassRunOutsideOfRoboVM() throws Exception {
+        final TestServer testServer = new TestServer();
+        PipedOutputStream cmdStream = new PipedOutputStream();
+        final PipedInputStream in = new PipedInputStream(cmdStream);
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Thread t = new Thread() {
+            public void run() {
+                testServer.run(in, out);
+            }
+        };
+        t.start();
+        
+        OutputStreamWriter cmdWriter = new OutputStreamWriter(cmdStream);
+        cmdWriter.write("load " + RunnerClass.class.getName() + "\n");
+        cmdWriter.flush();
+        cmdWriter.write("quit\n");
+        cmdWriter.flush();
+        
+        t.join();
+
+        String result = new String(out.toByteArray(), "ASCII");
+        System.out.println(result);
+        assertFalse(result.isEmpty());
+    }
+    
     @Test
     public void testSuccessfulWholeClassRun() throws Exception {
         RoboVMDeviceBridge roboVMDeviceBridge = new RoboVMDeviceBridge();
@@ -96,7 +133,12 @@ public class RoboVMDeviceBridgeTest {
     }
     
     private Config.Builder createConfig() throws IOException, ClassNotFoundException {
+        RoboVMResolver roboVMResolver = new RoboVMResolver();
+        Home home = new Home(roboVMResolver.resolveAndUnpackRoboVMDistArtifact(Version.getVersion()));
+
         Config.Builder config = new Config.Builder();
+
+        config.home(home);
 
         for (String p : System.getProperty("java.class.path").split(File.pathSeparator)) {
             config.addClasspathEntry(new File(p));

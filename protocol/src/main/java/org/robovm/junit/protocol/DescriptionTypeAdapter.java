@@ -17,8 +17,8 @@
 package org.robovm.junit.protocol;
 
 import com.google.gson.*;
+
 import org.junit.runner.Description;
-import org.junit.runner.notification.Failure;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -55,33 +55,5 @@ public class DescriptionTypeAdapter implements JsonDeserializer<Description>, Js
             description.addChild(deserialize(e, null, null));
         }
         return description;
-    }
-
-    public static class FailureTypeAdapter implements JsonSerializer<Failure>, JsonDeserializer<Failure> {
-
-        @Override
-        public JsonElement serialize(Failure failure, Type type, JsonSerializationContext jsonSerializationContext) {
-            JsonObject jsonObject = new JsonObject();
-
-            jsonObject.add("description",
-                    new DescriptionTypeAdapter().serialize(failure.getDescription(), null, null));
-            jsonObject.add("exception", new ThrowableTypeAdapter().serialize(failure.getException(), null, null));
-
-            return jsonObject;
-        }
-
-        @Override
-        public Failure deserialize(JsonElement jsonElement, Type type,
-                JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-            JsonObject jsonDescription = jsonObject.getAsJsonObject("description");
-            JsonObject jsonException = jsonObject.getAsJsonObject("exception");
-            Description description = new DescriptionTypeAdapter().deserialize(jsonDescription, null, null);
-            Throwable throwable = new ThrowableTypeAdapter().deserialize(jsonException, null, null);
-
-            Failure failure = new Failure(description, throwable);
-
-            return failure;
-        }
     }
 }

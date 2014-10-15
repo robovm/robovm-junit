@@ -49,14 +49,6 @@
                   <pattern>rx</pattern>
                   <shadedPattern>org.robovm.junit.deps.rx</shadedPattern>
                 </relocation>
-                <relocation>
-                  <pattern>com.google.gson</pattern>
-                  <shadedPattern>org.robovm.junit.deps.com.google.gson</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>biz.source_code.base64Coder</pattern>
-                  <shadedPattern>org.robovm.junit.deps.biz.source_code.base64Coder</shadedPattern>
-                </relocation>
               </relocations>
               <filters>
                 <filter>

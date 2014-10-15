@@ -16,9 +16,13 @@
  */
 package org.robovm.junit.protocol;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+
+import com.google.gson.GsonBuilder;
 
 /**
  * Wrapper JUnit result class to facilitate serialization through JSON
@@ -69,5 +73,23 @@ public class ResultObject {
 
     public void setFailure(Failure failure) {
         this.failure = failure;
+    }
+    
+    public String toJson() {
+        return new GsonBuilder()
+                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
+                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
+                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
+                .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
+                .create().toJson(this);
+    }
+
+    public static ResultObject fromJson(String jsonString) {
+        return new GsonBuilder()
+                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
+                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
+                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
+                .create()
+                .fromJson(jsonString, ResultObject.class);
     }
 }

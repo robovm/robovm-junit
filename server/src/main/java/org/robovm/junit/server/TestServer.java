@@ -17,6 +17,7 @@ package org.robovm.junit.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -37,11 +38,15 @@ import rx.functions.Func1;
 public class TestServer {
     public static final String DEBUG = "robovm.debug";
 
-    private static String LOAD = "load";
+    private static final String CMD_LOAD = "load";
+    private static final String CMD_QUIT = "quit";
+
     private static RoboTestListener listener;
     private static JUnitCore jUnitCore;
 
-    public static void main(String[] args) {
+    private volatile boolean stopped = false;
+    
+    public static void main(String[] args) throws IOException {
         debug("Running");
         /* register global uncaught exception handler */
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -55,16 +60,26 @@ public class TestServer {
                 }
             }
         });
+        
+        new TestServer().run();
+    }
 
+    public void run() throws IOException {
+        debug("Starting server");
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            System.err.println(TestServer.class.getName() + ": port=" + serverSocket.getLocalPort());
+            try (Socket socket = serverSocket.accept()) {
+                run(socket.getInputStream(), socket.getOutputStream());
+            }
+        }        
+    }
+
+    public void run(final InputStream in, final OutputStream out) {
         Observable.create(new Observable.OnSubscribe<String>() {
             @Override
             public void call(Subscriber<? super String> subscriber) {
-                debug("Starting server");
-                try (ServerSocket serverSocket = new ServerSocket(0)) {
-                    System.err.println(TestServer.class.getName() + ": port=" + serverSocket.getLocalPort());
-                    Socket socket = serverSocket.accept();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    OutputStream out = socket.getOutputStream();
+                try {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
                     listener = new RoboTestListener(out);
 
@@ -73,14 +88,14 @@ public class TestServer {
 
                     String line = null;
 
-                    while ((line = reader.readLine()) != null) {
+                    while (!stopped && (line = reader.readLine()) != null) {
                         if (!subscriber.isUnsubscribed()) {
                             subscriber.onNext(line);
                         }
                     }
 
                     subscriber.onCompleted();
-                } catch (IOException e) {
+                } catch (Throwable e) {
                     subscriber.onError(e);
                     printStackTrace(e);
                 }
@@ -109,17 +124,19 @@ public class TestServer {
             }
         });
     }
-
+    
     /**
      * Process command for running a JUnit test class or method
      * 
-     * @param command
+     * @param commandLine
      */
-    private static void processCommand(String command) {
+    protected void processCommand(String commandLine) {
+        int idx = commandLine.indexOf(' ');
+        String cmd = idx != -1 ? commandLine.substring(0, idx) : commandLine;
 
-        if (command.startsWith(LOAD)) {
-            String classLine = command.replaceAll(LOAD + " ", "");
-
+        switch (cmd) {
+        case CMD_LOAD:
+            String classLine = commandLine.substring(idx + 1).trim();
             if (classLine.contains("#")) {
                 debug("Running method " + classLine);
                 String classMethod[] = classLine.split("#(?=[^\\.]+$)");
@@ -129,6 +146,14 @@ public class TestServer {
                 runClass(jUnitCore, classLine);
                 debug("done");
             }
+            break;
+        case CMD_QUIT:
+            stopped = true;
+            break;
+        default:
+            error("Unrecognized command: " + commandLine);
+            stopped = true;
+            break;
         }
     }
 
@@ -149,7 +174,7 @@ public class TestServer {
      * @param className
      * @param method
      */
-    private static void runMethodOnly(JUnitCore jUnitCore, String className, String method) {
+    protected void runMethodOnly(JUnitCore jUnitCore, String className, String method) {
         try {
             jUnitCore.run(Request.method(Class.forName(className), method));
         } catch (ClassNotFoundException e) {
@@ -164,7 +189,7 @@ public class TestServer {
      * @param jUnitCore
      * @param className
      */
-    private static void runClass(JUnitCore jUnitCore, String className) {
+    protected void runClass(JUnitCore jUnitCore, String className) {
         try {
             jUnitCore.run(Class.forName(className));
         } catch (ClassNotFoundException e) {
