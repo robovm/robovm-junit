@@ -34,7 +34,7 @@ public class DescriptionTypeAdapter implements JsonDeserializer<Description>, Js
 
         JsonArray array = new JsonArray();
         for (Description desc : subDescription) {
-            array.add(serialize(desc, null, null));
+            array.add(jsonSerializationContext.serialize(desc));
         }
 
         jsonObject.add("sub_description", array);
@@ -52,7 +52,7 @@ public class DescriptionTypeAdapter implements JsonDeserializer<Description>, Js
         JsonArray array = jsonObject.getAsJsonArray("sub_description");
 
         for (JsonElement e : array) {
-            description.addChild(deserialize(e, null, null));
+            description.addChild(jsonDeserializationContext.<Description>deserialize(e, Description.class));
         }
         return description;
     }

@@ -16,29 +16,27 @@
  */
 package org.robovm.junit.protocol;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 /**
  * Wrapper JUnit result class to facilitate serialization through JSON
  */
 public class ResultObject {
-    public static final int TEST_IGNORED = 1;
-    public static final int TEST_RUN_STARTED = 2;
-    public static final int TEST_RUN_FINISHED = 3;
-    public static final int TEST_STARTED = 4;
-    public static final int TEST_FINISHED = 5;
-    public static final int TEST_FAILURE = 6;
 
-    public Description description;
+    static Gson gson = new GsonBuilder()
+        .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
+        .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
+        .create();
+    
+    ResultType resultType;
+    Description description;
     Result result;
     Failure failure;
-    int resultType;
 
     public ResultObject() {
     }
@@ -59,11 +57,11 @@ public class ResultObject {
         this.result = result;
     }
 
-    public int getResultType() {
+    public ResultType getResultType() {
         return resultType;
     }
 
-    public void setResultType(int resultType) {
+    public void setResultType(ResultType resultType) {
         this.resultType = resultType;
     }
 
@@ -76,20 +74,10 @@ public class ResultObject {
     }
     
     public String toJson() {
-        return new GsonBuilder()
-                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
-                .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
-                .create().toJson(this);
+        return gson.toJson(this);
     }
 
     public static ResultObject fromJson(String jsonString) {
-        return new GsonBuilder()
-                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
-                .create()
-                .fromJson(jsonString, ResultObject.class);
+        return gson.fromJson(jsonString, ResultObject.class);
     }
 }

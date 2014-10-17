@@ -73,11 +73,9 @@ public class ThrowableTypeAdapter implements JsonSerializer<Throwable>, JsonDese
             ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
             return (Throwable) objectInputStream.readObject();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new Error(e);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new Error(e);
         }
-
-        return null;
     }
 }

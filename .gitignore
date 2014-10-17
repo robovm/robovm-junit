@@ -5,3 +5,5 @@ robovm-surefire-provider.iml
 
 .*
 /*/target/
+dependency-reduced-pom.xml
+

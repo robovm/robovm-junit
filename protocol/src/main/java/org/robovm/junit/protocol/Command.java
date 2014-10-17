@@ -5,35 +5,35 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
-
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-package org.robovm.junit.client;
+package org.robovm.junit.protocol;
 
-import static org.junit.Assert.*;
+/**
+ * Commands supported by the JUnit bridge protocol.
+ */
+public enum Command {
 
-import org.junit.Test;
+    /**
+     * Runs a test class or method. Takes a single argument which is the test
+     * class or a single test method to be run. E.g.:
+     * 
+     * <pre>
+     *   run com.example.SomeTest
+     *   run com.example.SomeTest#testSomething
+     * </pre>
+     */
+    run,
 
-public class RunnerClass {
+    /**
+     * Termintes the test server process.
+     */
+    terminate;
 
-    @Test
-    public void testSuccessfulTest1() {
-        assertFalse(1 == 2);
-    }
-
-    @Test
-    public void testSuccessfulTest2() {
-        assertNotEquals(0, System.currentTimeMillis());
-    }
-
-    @Test
-    public void testShouldFail() {
-        assertTrue("1 == 2", 1 == 2);
-    }
 }

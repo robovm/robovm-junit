@@ -15,97 +15,84 @@
  */
 package org.robovm.junit.server;
 
-import static org.robovm.junit.protocol.ResultObject.*;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.robovm.junit.deps.com.google.gson.GsonBuilder;
-import org.robovm.junit.protocol.AtomicIntegerTypeAdapter;
-import org.robovm.junit.protocol.DescriptionTypeAdapter;
-import org.robovm.junit.protocol.FailureTypeAdapter;
 import org.robovm.junit.protocol.ResultObject;
-import org.robovm.junit.protocol.ThrowableTypeAdapter;
+import org.robovm.junit.protocol.ResultType;
 
 /**
  * JUnit RunListener which sends results via an output stream (eg. socket) to a
  * listening instance (eg. surefire provider)
  */
 public class RoboTestListener extends org.junit.runner.notification.RunListener {
-
-    private OutputStream out;
-
-    private static ArrayList<String> failedTests = new ArrayList<String>();
+    private final PrintWriter writer;
 
     public RoboTestListener(OutputStream out) {
-        this.out = out;
+        this.writer = new PrintWriter(out, true);
     }
 
     @Override
+    public void testAssumptionFailure(Failure failure) {
+        sendToHost(createFailureResult(failure, ResultType.AssumptionFailure));
+    }
+    
+    @Override
     public void testIgnored(Description description) throws Exception {
-        sendToHost(TEST_IGNORED, createDescriptionResult(description, TEST_IGNORED));
+        sendToHost(createDescriptionResult(description, ResultType.Ignored));
     }
 
     @Override
     public void testRunStarted(Description description) throws Exception {
-        sendToHost(TEST_RUN_STARTED, createDescriptionResult(description, TEST_RUN_STARTED));
+        sendToHost(createDescriptionResult(description, ResultType.RunStarted));
     }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        sendToHost(TEST_RUN_FINISHED, createResultResult(result, TEST_RUN_FINISHED));
+        sendToHost(createResultResult(result, ResultType.RunFinished));
     }
 
     @Override
     public void testStarted(Description description) throws Exception {
-        sendToHost(TEST_STARTED, createDescriptionResult(description, TEST_STARTED));
+        sendToHost(createDescriptionResult(description, ResultType.Started));
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        for (String failedTest : failedTests) {
-            if (description.getDisplayName().equals(failedTest)) {
-                return;
-            }
-        }
-        sendToHost(TEST_FINISHED, createDescriptionResult(description, TEST_FINISHED));
+        sendToHost(createDescriptionResult(description, ResultType.Finished));
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
-        failedTests.add(failure.getDescription().getDisplayName());
-        sendToHost(TEST_FAILURE, createFailureResult(failure, TEST_FAILURE));
+        sendToHost(createFailureResult(failure, ResultType.Failure));
     }
 
-    private ResultObject createFailureResult(Failure failure, int type) {
+    private ResultObject createFailureResult(Failure failure, ResultType type) {
         ResultObject resultObject = new ResultObject();
         resultObject.setFailure(failure);
         resultObject.setResultType(type);
         return resultObject;
     }
 
-    private ResultObject createDescriptionResult(Description description, int type) {
+    private ResultObject createDescriptionResult(Description description, ResultType type) {
         ResultObject resultObject = new ResultObject();
         resultObject.setDescription(description);
         resultObject.setResultType(type);
         return resultObject;
     }
 
-    private ResultObject createResultResult(Result result, int type) {
+    private ResultObject createResultResult(Result result, ResultType type) {
         ResultObject resultObject = new ResultObject();
         resultObject.setResult(result);
         resultObject.setResultType(type);
         return resultObject;
     }
 
-    public void sendToHost(int type, ResultObject message) {
-
+    public void sendToHost(ResultObject message) {
         try {
             transmit(message);
         } catch (Exception e) {
@@ -113,22 +100,10 @@ public class RoboTestListener extends org.junit.runner.notification.RunListener 
             // this in any way.
             throw new Error(e);
         }
-
     }
 
     private void transmit(ResultObject message) throws IOException, InterruptedException {
-
-        PrintWriter writer;
-        
-        String transmitMessage = new GsonBuilder()
-                .registerTypeAdapter(Description.class, new DescriptionTypeAdapter())
-                .registerTypeAdapter(AtomicInteger.class, new AtomicIntegerTypeAdapter())
-                .registerTypeAdapter(Failure.class, new FailureTypeAdapter())
-                .registerTypeAdapter(Throwable.class, new ThrowableTypeAdapter())
-                .create().toJson(message);
-
-        writer = new PrintWriter(out, true);
-        writer.println(transmitMessage);
+        writer.println(message.toJson());
         writer.flush();
     }
 

@@ -28,16 +28,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
+import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Config.Home;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.junit.protocol.ResultObject;
+import org.robovm.junit.protocol.Command;
 import org.robovm.junit.server.TestServer;
 import org.robovm.maven.resolver.RoboVMResolver;
-
-import rx.observables.BlockingObservable;
 
 /**
  * Tests {@link TestClient}.
@@ -56,82 +58,62 @@ public class TestClientTest {
             }
         };
         t.start();
-        
+
         OutputStreamWriter cmdWriter = new OutputStreamWriter(cmdStream);
-        cmdWriter.write("load " + RunnerClass.class.getName() + "\n");
+        cmdWriter.write(Command.run + " " + RunnerClass.class.getName() + "\n");
         cmdWriter.flush();
-        cmdWriter.write("quit\n");
+        cmdWriter.write(Command.terminate + "\n");
         cmdWriter.flush();
-        
+
         t.join();
 
         String result = new String(out.toByteArray(), "ASCII");
         System.out.println(result);
         assertFalse(result.isEmpty());
     }
-    
+
     @Test
-    public void testSuccessfulWholeClassRun() throws Exception {
+    public void testSuccessfulWholeClassRun() throws Throwable {
         TestClient client = new TestClient();
-        Config config = client.compile(createConfig());
+        TestRunListener listener = new TestRunListener();
+        client.setRunListener(listener);
+        Config config = client.configure(createConfig()).build();
+        AppCompiler appCompiler = new AppCompiler(config);
+        appCompiler.compile();
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
-        client.start(config, launchParameters);
-        
-        BlockingObservable<ResultObject> blockingObservable = BlockingObservable.from(client
-                .runTests(config, new String[] { RunnerClass.class.getName() }));
-        List<String>  successfulTests = new ArrayList<>();
-        List<String> failedTests = new ArrayList<>();
-        for (ResultObject resultObject : blockingObservable.toIterable()) {
-            switch (resultObject.getResultType()) {
-            case ResultObject.TEST_FINISHED:
-                successfulTests.add(resultObject.getDescription().toString());
-                break;
-            case ResultObject.TEST_FAILURE:
-                failedTests.add(resultObject.getFailure().toString());
-                break;
-            }
-        }
+        Process process = appCompiler.launchAsync(launchParameters);
+        client.runTests(RunnerClass.class.getName()).terminate();
+        process.waitFor();
+        appCompiler.launchAsyncCleanup();
 
-        assertEquals("2 successful tests expected", 2, successfulTests.size());
-        assertTrue(successfulTests.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
-        assertTrue(successfulTests.contains("testSuccessfulTest2(" + RunnerClass.class.getName() + ")"));
-        assertEquals("1 failed test expected", 1, failedTests.size());
-        assertTrue(failedTests.contains("testShouldFail(" + RunnerClass.class.getName() + "): null"));
-
-        client.stop();
+        assertEquals("2 successful tests expected", 2, listener.successful.size());
+        assertTrue(listener.successful.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
+        assertTrue(listener.successful.contains("testSuccessfulTest2(" + RunnerClass.class.getName() + ")"));
+        assertEquals("1 failed test expected", 1, listener.failed.size());
+        assertTrue(listener.failed.contains("testShouldFail(" + RunnerClass.class.getName() + "): 1 == 2"));
     }
 
     @Test
-    public void testSuccessfulSingleMethodRun() throws Exception {
+    public void testSuccessfulSingleMethodRun() throws Throwable {
         TestClient client = new TestClient();
-        Config config = client.compile(createConfig());
+        TestRunListener listener = new TestRunListener();
+        client.setRunListener(listener);
+        Config config = client.configure(createConfig()).build();
+        AppCompiler appCompiler = new AppCompiler(config);
+        appCompiler.compile();
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
-        client.start(config, launchParameters);
+        Process process = appCompiler.launchAsync(launchParameters);
+        client.runTests(RunnerClass.class.getName() + "#testSuccessfulTest1").terminate();
+        process.waitFor();
+        appCompiler.launchAsyncCleanup();
 
-        BlockingObservable<ResultObject> blockingObservable = BlockingObservable.from(client
-                .runTests(config, new String[] { RunnerClass.class.getName() + "#testSuccessfulTest1" }));
-        List<String>  successfulTests = new ArrayList<>();
-        List<String> failedTests = new ArrayList<>();
-        for (ResultObject resultObject : blockingObservable.toIterable()) {
-            switch (resultObject.getResultType()) {
-            case ResultObject.TEST_FINISHED:
-                successfulTests.add(resultObject.getDescription().toString());
-                break;
-            case ResultObject.TEST_FAILURE:
-                failedTests.add(resultObject.getFailure().toString());
-                break;
-            }
-        }
-
-        assertEquals("1 successful tests expected", 1, successfulTests.size());
-        assertTrue(successfulTests.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
-        assertEquals("0 failed tests expected", 0, failedTests.size());
-
-        client.stop();
+        assertEquals("1 successful tests expected", 1, listener.successful.size());
+        assertTrue(listener.successful.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
+        assertEquals("0 failed tests expected", 0, listener.failed.size());
     }
-    
+
     private Config.Builder createConfig() throws IOException, ClassNotFoundException {
         RoboVMResolver roboVMResolver = new RoboVMResolver();
         Home home = new Home(roboVMResolver.resolveAndUnpackRoboVMDistArtifact(Version.getVersion()));
@@ -143,7 +125,7 @@ public class TestClientTest {
         for (String p : System.getProperty("java.class.path").split(File.pathSeparator)) {
             config.addClasspathEntry(new File(p));
         }
-        
+
         config.addForceLinkClass(RunnerClass.class.getName());
         config.logger(new ConsoleLogger(true));
         config.skipInstall(true);
@@ -151,4 +133,31 @@ public class TestClientTest {
         return config;
     }
 
+    private static class TestRunListener extends RunListener {
+        List<String> successful = new ArrayList<>();
+        List<String> failed = new ArrayList<>();
+        boolean success = true;
+        Failure failure = null;
+
+        @Override
+        public void testStarted(Description description) throws Exception {
+            success = true;
+            failure = null;
+        }
+
+        @Override
+        public void testFailure(Failure failure) throws Exception {
+            success = false;
+            this.failure = failure;
+        }
+
+        @Override
+        public void testFinished(Description description) throws Exception {
+            if (success) {
+                successful.add(description.toString());
+            } else {
+                failed.add(failure.toString());
+            }
+        }
+    }
 }

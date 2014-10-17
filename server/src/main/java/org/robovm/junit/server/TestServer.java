@@ -25,6 +25,7 @@ import java.net.Socket;
 
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
+import org.robovm.junit.protocol.Command;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -40,15 +41,24 @@ import rx.functions.Func1;
 public class TestServer {
     public static final String DEBUG = "robovm.debug";
 
-    private static final String CMD_LOAD = "load";
-    private static final String CMD_QUIT = "quit";
-
     private static RoboTestListener listener;
     private static JUnitCore jUnitCore;
 
     private volatile boolean stopped = false;
-    
+
     public static void main(String[] args) throws IOException {
+        /*
+         * The iOS simulator seems to relaunch apps that quit too fast or don't
+         * call into the UIKit event loop. The simulator doesn't preserve args
+         * when relaunching. The TestClient sets a special system property on
+         * the command line. If it's not set we now that we have been
+         * relaunched. In that case we return immediately.
+         */
+        if (System.getProperty("os.name").equals("iOS Simulator") 
+                && !Boolean.getBoolean("robovm.launchedFromTestClient")) {
+            return;
+        }
+
         debug("Running");
         /* register global uncaught exception handler */
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -64,6 +74,7 @@ public class TestServer {
         });
         
         new TestServer().run();
+        debug("Exiting");
     }
 
     public void run() throws IOException {
@@ -134,10 +145,17 @@ public class TestServer {
      */
     protected void processCommand(String commandLine) {
         int idx = commandLine.indexOf(' ');
-        String cmd = idx != -1 ? commandLine.substring(0, idx) : commandLine;
+        Command cmd = null;
+        try {
+            cmd = Command.valueOf(idx != -1 ? commandLine.substring(0, idx) : commandLine);
+        } catch (IllegalArgumentException e) {
+            error("Unrecognized command: " + commandLine);
+            stopped = true;
+            return;
+        }
 
         switch (cmd) {
-        case CMD_LOAD:
+        case run:
             String classLine = commandLine.substring(idx + 1).trim();
             if (classLine.contains("#")) {
                 debug("Running method " + classLine);
@@ -149,11 +167,7 @@ public class TestServer {
                 debug("done");
             }
             break;
-        case CMD_QUIT:
-            stopped = true;
-            break;
-        default:
-            error("Unrecognized command: " + commandLine);
+        case terminate:
             stopped = true;
             break;
         }
@@ -202,12 +216,12 @@ public class TestServer {
 
     static void debug(String logLine) {
         if (Boolean.getBoolean(DEBUG)) {
-            System.err.println(logLine);
+            System.err.println(TestServer.class.getName() + " [DEBUG]: " + logLine);
         }
     }
 
     static void error(String logLine) {
-        System.err.println(logLine);
+        System.err.println(TestServer.class.getName() + " [ERROR]: " + logLine);
     }
 
 }
