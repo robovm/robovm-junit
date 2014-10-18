@@ -33,8 +33,10 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
+import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Config.Home;
+import org.robovm.compiler.config.OS;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.junit.protocol.Command;
@@ -77,7 +79,10 @@ public class TestClientTest {
         TestClient client = new TestClient();
         TestRunListener listener = new TestRunListener();
         client.setRunListener(listener);
-        Config config = client.configure(createConfig()).build();
+        Config config = client.configure(createConfig())
+                .os(OS.ios)
+                .arch(Arch.thumbv7)
+                .build();
         AppCompiler appCompiler = new AppCompiler(config);
         appCompiler.compile();
 

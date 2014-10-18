@@ -75,12 +75,13 @@ public class TestServer {
         
         new TestServer().run();
         debug("Exiting");
+        System.exit(0);
     }
 
     public void run() throws IOException {
         debug("Starting server");
         try (ServerSocket serverSocket = new ServerSocket(0)) {
-            System.err.println(TestServer.class.getName() + ": port=" + serverSocket.getLocalPort());
+            System.out.println(TestServer.class.getName() + ": port=" + serverSocket.getLocalPort());
             try (Socket socket = serverSocket.accept()) {
                 run(socket.getInputStream(), socket.getOutputStream());
             }
