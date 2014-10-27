@@ -225,6 +225,7 @@ public class TestClient extends LaunchPlugin {
                     }
                     config.getLogger().debug("Test client finished.");
                 } catch (Throwable t) {
+                    t.printStackTrace();
                     subscriber.onError(t);
                 }
                 subscriber.onCompleted();
