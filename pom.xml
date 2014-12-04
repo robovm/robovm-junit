@@ -20,6 +20,12 @@
   <name>RoboVM Junit parent</name>
   <packaging>pom</packaging>
 
+  <scm>
+    <connection>scm:git:git://github.com/robovm/robovm-junit.git</connection>
+    <developerConnection>scm:git:git@github.com:robovm/robovm-junit.git</developerConnection>
+    <url>https://github.com/robovm/robovm-junit.git</url>
+  </scm>
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
