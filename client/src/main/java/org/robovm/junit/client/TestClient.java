@@ -32,7 +32,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.notification.RunListener;
-import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.plugin.LaunchPlugin;
 import org.robovm.compiler.plugin.PluginArgument;
@@ -206,7 +205,7 @@ public class TestClient extends LaunchPlugin {
                 int port = serverPortReader.port;
 
                 try {
-                    if (config.getTarget() instanceof IOSTarget && config.getArch() == Arch.thumbv7) {
+                    if (config.getTarget() instanceof IOSTarget && IOSTarget.isDeviceArch(config.getArch())) {
                         // iOS device launch. Use libimobiledevice to set up the connection.
                         IDevice device = ((IOSTarget) config.getTarget()).getDevice();
                         config.getLogger().debug("Connecting to test server running on port %d " 
