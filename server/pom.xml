@@ -23,8 +23,8 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
     </dependency>
   </dependencies>
 

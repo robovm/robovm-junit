@@ -41,6 +41,8 @@ import org.robovm.junit.protocol.Command;
 import org.robovm.junit.server.TestServer;
 import org.robovm.maven.resolver.RoboVMResolver;
 
+import rx.functions.Action1;
+
 /**
  * Tests {@link TestClient}.
  */
@@ -52,12 +54,6 @@ public class TestClientTest {
         PipedOutputStream cmdStream = new PipedOutputStream();
         final PipedInputStream in = new PipedInputStream(cmdStream);
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Thread t = new Thread() {
-            public void run() {
-                testServer.run(in, out);
-            }
-        };
-        t.start();
 
         OutputStreamWriter cmdWriter = new OutputStreamWriter(cmdStream);
         cmdWriter.write(Command.run + " " + RunnerClass.class.getName() + "\n");
@@ -65,11 +61,20 @@ public class TestClientTest {
         cmdWriter.write(Command.terminate + "\n");
         cmdWriter.flush();
 
-        t.join();
+        final ArrayList<String> results = new ArrayList<>();
 
-        String result = new String(out.toByteArray(), "ASCII");
-        System.out.println(result);
-        assertFalse(result.isEmpty());
+        /* take two emissions */
+        testServer.run(in, out).take(2).subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                        results.add(s);
+                }
+        });
+
+        System.out.println(results.get(0));
+        assertTrue(results.get(0).equals(Command.run + " " + RunnerClass.class.getName()));
+        System.out.println(results.get(1));
+        assertTrue(results.get(1).equals(Command.terminate.toString()));
     }
 
     @Test
