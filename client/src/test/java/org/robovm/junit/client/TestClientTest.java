@@ -78,6 +78,28 @@ public class TestClientTest {
     }
 
     @Test
+    public void testSuccessfulWholeClassRunWithCustomMain() throws Throwable {
+        TestClient client = new TestClient(org.robovm.junit.launcher.TestAppLauncher.class);
+        TestRunListener listener = new TestRunListener();
+        client.setRunListener(listener);
+        Config config = client.configure(createConfig()).build();
+        AppCompiler appCompiler = new AppCompiler(config);
+        appCompiler.compile();
+
+        LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
+        Process process = appCompiler.launchAsync(launchParameters);
+        client.runTests(RunnerClass.class.getName()).terminate();
+        process.waitFor();
+        appCompiler.launchAsyncCleanup();
+
+        assertEquals("2 successful tests expected", 2, listener.successful.size());
+        assertTrue(listener.successful.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
+        assertTrue(listener.successful.contains("testSuccessfulTest2(" + RunnerClass.class.getName() + ")"));
+        assertEquals("1 failed test expected", 1, listener.failed.size());
+        assertTrue(listener.failed.contains("testShouldFail(" + RunnerClass.class.getName() + "): 1 == 2"));
+    }
+
+    @Test
     public void testSuccessfulWholeClassRun() throws Throwable {
         TestClient client = new TestClient();
         TestRunListener listener = new TestRunListener();

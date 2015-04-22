@@ -69,7 +69,7 @@ public class TestClient extends LaunchPlugin {
     }
     private static class Terminator extends Waiter {}
     
-    public static String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
+    public static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
 
     private ServerPortReader serverPortReader;
     private File oldStdOutFifo;
@@ -77,12 +77,14 @@ public class TestClient extends LaunchPlugin {
     private OutputStream defaultStdOutStream;
     private LinkedBlockingQueue<Object> runQueue = new LinkedBlockingQueue<>();
     private RunListener runListener;
+    private String mainClass;
 
     public TestClient() {
+        mainClass = SERVER_CLASS_NAME;
     }
 
-    public void setMainClass(Class mainClass) {
-        SERVER_CLASS_NAME = mainClass.getName();
+    public TestClient(Class mainClass) {
+        this.mainClass = mainClass.getName();
     }
 
     public TestClient runTests(String ... testsToRun) {
@@ -241,7 +243,7 @@ public class TestClient extends LaunchPlugin {
             throw new IllegalArgumentException("RoboVM configuration cannot be null");
         }
 
-        configBuilder.mainClass(SERVER_CLASS_NAME);
+        configBuilder.mainClass(mainClass);
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLProvider");
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLMessageDigestJDK**");
         
