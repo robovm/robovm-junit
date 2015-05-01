@@ -75,8 +75,6 @@ public class TestServer {
         });
         
         new TestServer().run();
-        debug("Exiting");
-        System.exit(0);
     }
 
     public void run() throws IOException {
@@ -106,7 +104,9 @@ public class TestServer {
                 }, new Action0() {
                         @Override
                         public void call() {
-                                debug("Finished test run");
+                            debug("Finished test run");
+                            debug("Exiting");
+                            System.exit(0);
                         }
                 });
             }
