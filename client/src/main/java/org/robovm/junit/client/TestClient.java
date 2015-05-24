@@ -16,20 +16,6 @@
 
 package org.robovm.junit.client;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.notification.RunListener;
 import org.robovm.compiler.config.Config;
@@ -46,12 +32,17 @@ import org.robovm.junit.protocol.ResultObject;
 import org.robovm.junit.protocol.ResultType;
 import org.robovm.libimobiledevice.IDevice;
 import org.robovm.libimobiledevice.IDeviceConnection;
-
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
+
+import java.io.*;
+import java.net.Socket;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Client side of the bridge between the tester (IDE, Maven, Gradle, etc) and
@@ -156,29 +147,29 @@ public class TestClient extends LaunchPlugin {
             public void call(ResultObject o) {
                 try {
                     switch (o.getResultType()) {
-                    case AssumptionFailure:
-                        runListener.testAssumptionFailure(o.getFailure());
-                        break;
-                    case Failure:
-                        runListener.testFailure(o.getFailure());
-                        break;
-                    case Finished:
-                        runListener.testFinished(o.getDescription());
-                        break;
-                    case Ignored:
-                        runListener.testIgnored(o.getDescription());
-                        break;
-                    case RunFinished:
-                        runListener.testRunFinished(o.getResult());
-                        break;
-                    case RunStarted:
-                        runListener.testRunStarted(o.getDescription());
-                        break;
-                    case Started:
-                        runListener.testStarted(o.getDescription());
-                        break;
-                    default:
-                        break;
+                        case AssumptionFailure:
+                            runListener.testAssumptionFailure(o.getFailure());
+                            break;
+                        case Failure:
+                            runListener.testFailure(o.getFailure());
+                            break;
+                        case Finished:
+                            runListener.testFinished(o.getDescription());
+                            break;
+                        case Ignored:
+                            runListener.testIgnored(o.getDescription());
+                            break;
+                        case RunFinished:
+                            runListener.testRunFinished(o.getResult());
+                            break;
+                        case RunStarted:
+                            runListener.testRunStarted(o.getDescription());
+                            break;
+                        case Started:
+                            runListener.testStarted(o.getDescription());
+                            break;
+                        default:
+                            break;
                     }
                 } catch (Exception e) {
                     // Swallow
@@ -285,7 +276,9 @@ public class TestClient extends LaunchPlugin {
                     ((Waiter) action).run();
                 }
             }
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException e) {
+           subscriber.onError(e);
+        }
 
         config.getLogger().debug("Test run completed. Shutting down test server...");
 

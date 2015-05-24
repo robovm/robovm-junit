@@ -40,8 +40,8 @@ import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.junit.protocol.Command;
 import org.robovm.junit.server.TestServer;
 import org.robovm.maven.resolver.RoboVMResolver;
-
 import rx.functions.Action1;
+
 
 /**
  * Tests {@link TestClient}.
@@ -65,10 +65,10 @@ public class TestClientTest {
 
         /* take two emissions */
         testServer.run(in, out).take(2).subscribe(new Action1<String>() {
-                @Override
-                public void call(String s) {
-                        results.add(s);
-                }
+            @Override
+            public void call(String s) {
+                results.add(s);
+            }
         });
 
         System.out.println(results.get(0));
