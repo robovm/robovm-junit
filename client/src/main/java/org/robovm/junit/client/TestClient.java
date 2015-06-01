@@ -196,7 +196,7 @@ public class TestClient extends LaunchPlugin {
     public void launchFailed(Config config, LaunchParameters parameters) {
     }
     
-    private Observable<ResultObject> runTests(final Config config) {
+    public Observable<ResultObject> runTests(final Config config) {
         return Observable.create(new Observable.OnSubscribe<ResultObject>() {
             @Override
             public void call(Subscriber<? super ResultObject> subscriber) {
