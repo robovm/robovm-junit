@@ -41,6 +41,8 @@ import org.robovm.junit.protocol.Command;
 import org.robovm.junit.server.TestServer;
 import org.robovm.maven.resolver.RoboVMResolver;
 
+import rx.functions.Action1;
+
 /**
  * Tests {@link TestClient}.
  */
@@ -52,12 +54,6 @@ public class TestClientTest {
         PipedOutputStream cmdStream = new PipedOutputStream();
         final PipedInputStream in = new PipedInputStream(cmdStream);
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Thread t = new Thread() {
-            public void run() {
-                testServer.run(in, out);
-            }
-        };
-        t.start();
 
         OutputStreamWriter cmdWriter = new OutputStreamWriter(cmdStream);
         cmdWriter.write(Command.run + " " + RunnerClass.class.getName() + "\n");
@@ -65,11 +61,42 @@ public class TestClientTest {
         cmdWriter.write(Command.terminate + "\n");
         cmdWriter.flush();
 
-        t.join();
+        final ArrayList<String> results = new ArrayList<>();
 
-        String result = new String(out.toByteArray(), "ASCII");
-        System.out.println(result);
-        assertFalse(result.isEmpty());
+        /* take two emissions */
+        testServer.run(in, out).take(2).subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                        results.add(s);
+                }
+        });
+
+        System.out.println(results.get(0));
+        assertTrue(results.get(0).equals(Command.run + " " + RunnerClass.class.getName()));
+        System.out.println(results.get(1));
+        assertTrue(results.get(1).equals(Command.terminate.toString()));
+    }
+
+    @Test
+    public void testSuccessfulWholeClassRunWithCustomMain() throws Throwable {
+        TestClient client = new TestClient(org.robovm.junit.launcher.TestAppLauncher.class);
+        TestRunListener listener = new TestRunListener();
+        client.setRunListener(listener);
+        Config config = client.configure(createConfig()).build();
+        AppCompiler appCompiler = new AppCompiler(config);
+        appCompiler.compile();
+
+        LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
+        Process process = appCompiler.launchAsync(launchParameters);
+        client.runTests(RunnerClass.class.getName()).terminate();
+        process.waitFor();
+        appCompiler.launchAsyncCleanup();
+
+        assertEquals("2 successful tests expected", 2, listener.successful.size());
+        assertTrue(listener.successful.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
+        assertTrue(listener.successful.contains("testSuccessfulTest2(" + RunnerClass.class.getName() + ")"));
+        assertEquals("1 failed test expected", 1, listener.failed.size());
+        assertTrue(listener.failed.contains("testShouldFail(" + RunnerClass.class.getName() + "): 1 == 2"));
     }
 
     @Test

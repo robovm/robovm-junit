@@ -49,6 +49,7 @@ import org.robovm.libimobiledevice.IDeviceConnection;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
@@ -77,8 +78,14 @@ public class TestClient extends LaunchPlugin {
     private OutputStream defaultStdOutStream;
     private LinkedBlockingQueue<Object> runQueue = new LinkedBlockingQueue<>();
     private RunListener runListener;
+    private String mainClass;
 
     public TestClient() {
+        mainClass = SERVER_CLASS_NAME;
+    }
+
+    public TestClient(Class mainClass) {
+        this.mainClass = mainClass.getName();
     }
 
     public TestClient runTests(String ... testsToRun) {
@@ -237,7 +244,7 @@ public class TestClient extends LaunchPlugin {
             throw new IllegalArgumentException("RoboVM configuration cannot be null");
         }
 
-        configBuilder.mainClass(SERVER_CLASS_NAME);
+        configBuilder.mainClass(mainClass);
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLProvider");
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLMessageDigestJDK**");
         
