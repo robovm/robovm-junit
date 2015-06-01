@@ -14,7 +14,7 @@
 
   <groupId>org.robovm</groupId>
   <artifactId>robovm-junit-parent</artifactId>
-  <version>1.2.1-SNAPSHOT</version>
+  <version>1.3.1-SNAPSHOT</version>
   <name>RoboVM Junit parent</name>
   <packaging>pom</packaging>
 
