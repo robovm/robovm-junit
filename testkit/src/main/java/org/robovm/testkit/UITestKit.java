@@ -34,6 +34,28 @@ public class UITestKit {
         adapter.getWindow().setRootViewController(rootViewController);
     }
 
+    public static UIView getChildViewWithText(String text) {
+        UIViewController rootViewController;
+
+        waitForBind();
+
+        rootViewController = UIApplication.getSharedApplication().getDelegate().getWindow().getRootViewController();
+
+        NSArray<UIView> subviews = rootViewController.getView().getSubviews();
+        for (UIView subview : subviews) {
+            if (subview instanceof UITextView) {
+                if (((UITextView)subview).getText().equals(text)){
+                    return subview;
+                }
+            } else if (subview instanceof UILabel) {
+                if (((UILabel)subview).getText().equals(text)){
+                    return subview;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * Return child with specified placeholder text
      * 
@@ -43,15 +65,7 @@ public class UITestKit {
     public static UIView getChildViewWithPlaceholderText(String placeholderText) {
         UIViewController rootViewController;
 
-        while (true) {
-            UIApplication application = UIApplication.getSharedApplication();
-            if (application != null) {
-                if (application.getWindows().size() >= 1) {
-                    debug("Waiting for UI bind...");
-                    break;
-                }
-            }
-        }
+       waitForBind();
 
         rootViewController = UIApplication.getSharedApplication().getDelegate().getWindow().getRootViewController();
 
@@ -66,6 +80,17 @@ public class UITestKit {
         return null;
     }
 
+    private static void waitForBind() {
+        while (true) {
+            UIApplication application = UIApplication.getSharedApplication();
+            if (application != null) {
+                if (application.getWindows().size() >= 1) {
+                    debug("Waiting for UI bind...");
+                    break;
+                }
+            }
+        }
+    }
     static void debug(String logLine) {
         if (Boolean.getBoolean(DEBUG)) {
             System.err.println(" [DEBUG]: " + logLine);

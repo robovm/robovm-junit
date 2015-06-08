@@ -185,6 +185,16 @@ public class AbstractJ4Runner extends BlockJUnit4ClassRunner {
                 + File.separator + "classes"));
         configBuilder.addClasspathEntry(new File(System.getProperty("user.dir") + File.separator + "target"
                 + File.separator + "test-classes"));
+
+
+        for (String p : System.getProperty("java.class.path").split(File.pathSeparator)) {
+            if (!p.contains("jdk") && !p.contains("robovm-compiler")) {
+                configBuilder.addClasspathEntry(new File(p));
+            }
+        }
+
+
+
         configBuilder.addForceLinkClass(getName());
         configBuilder.skipInstall(true);
 

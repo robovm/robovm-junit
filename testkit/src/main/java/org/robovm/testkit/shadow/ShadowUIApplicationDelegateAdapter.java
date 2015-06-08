@@ -34,11 +34,16 @@ public class ShadowUIApplicationDelegateAdapter extends UIApplicationDelegateAda
         window = new UIWindow(org.robovm.apple.uikit.UIScreen.getMainScreen().getBounds());
         window.makeKeyAndVisible();
         Foundation.log("Loaded");
-        try {
-            new TestServer().run();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    new TestServer().run();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
         return true;
     }
 

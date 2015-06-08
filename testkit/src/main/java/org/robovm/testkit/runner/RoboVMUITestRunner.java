@@ -21,6 +21,7 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.robovm.apple.foundation.*;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Config;
@@ -41,7 +42,7 @@ public class RoboVMUITestRunner extends AbstractJ4Runner {
     }
 
     @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+    protected void runChild(final FrameworkMethod method, final RunNotifier notifier) {
         if (!System.getProperty("os.name").contains("iOS")) {
             if (testClient == null) {
                 testClient = new TestClient(ShadowUIApplication.class);
@@ -83,14 +84,25 @@ public class RoboVMUITestRunner extends AbstractJ4Runner {
                 }
             }
 
+
+
             try {
                 testClient.runTests(clazz.getName() + "#" + method.getMethod().getName()).flush();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         } else {
-            Description description = describeChild(method);
-            runLeaf(methodBlock(method), description, notifier);
+                NSMutableArray<NSOperation> ops = new NSMutableArray<NSOperation>(new NSOperation(){
+                @Override
+                public void main() {
+                    Description description = describeChild(method);
+                    runLeaf(methodBlock(method), description, notifier);
+                }
+            });
+
+            NSOperationQueue.getMainQueue().addOperations(ops, true);
+
         }
     }
+
 }
