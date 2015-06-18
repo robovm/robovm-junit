@@ -32,6 +32,7 @@ import rx.Subscriber;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Server side of the bridge between the tester (IDE, Maven, Gradle, etc) and
@@ -43,8 +44,7 @@ public class TestServer {
 
     private static RoboTestListener listener;
     private static JUnitCore jUnitCore;
-
-    private volatile boolean stopped = false;
+    private Observable<String> socketObservable;
 
     public static void main(String[] args) throws IOException {
         /*
@@ -83,13 +83,37 @@ public class TestServer {
         try (ServerSocket serverSocket = new ServerSocket(0)) {
             System.out.println(TestServer.class.getName() + ": port=" + serverSocket.getLocalPort());
             try (Socket socket = serverSocket.accept()) {
-                run(socket.getInputStream(), socket.getOutputStream());
+                socketObservable = run(socket.getInputStream(), socket.getOutputStream());
+				socketObservable
+				.filter(new Func1<String, Boolean>() {
+					@Override
+					public Boolean call(String s) {
+						return s.length() > 0;
+					}
+				}).subscribe(new Action1<String>() {
+					@Override
+					public void call(String string) {
+						debug("Processing command: " + string);
+						processCommand(string);
+					}
+				}, new Action1<Throwable>() {
+					@Override
+					public void call(Throwable throwable) {
+						debug("Error running tests");
+						printStackTrace(throwable);
+					}
+				}, new Action0() {
+					@Override
+					public void call() {
+						debug("Finished test run");
+					}
+				});
             }
         }        
     }
 
-    public void run(final InputStream in, final OutputStream out) {
-        Observable.create(new Observable.OnSubscribe<String>() {
+    public Observable<String> run(final InputStream in, final OutputStream out) {
+        return Observable.create(new Observable.OnSubscribe<String>() {
             @Override
             public void call(Subscriber<? super String> subscriber) {
                 try {
@@ -102,39 +126,16 @@ public class TestServer {
 
                     String line = null;
 
-                    while (!stopped && (line = reader.readLine()) != null) {
+                    while (!subscriber.isUnsubscribed() && (line = reader.readLine()) != null) {
                         if (!subscriber.isUnsubscribed()) {
                             subscriber.onNext(line);
                         }
                     }
-
                     subscriber.onCompleted();
                 } catch (Throwable e) {
                     subscriber.onError(e);
                     printStackTrace(e);
                 }
-            }
-        }).filter(new Func1<String, Boolean>() {
-            @Override
-            public Boolean call(String s) {
-                return s.length() > 0;
-            }
-        }).subscribe(new Action1<String>() {
-            @Override
-            public void call(String string) {
-                debug("Processing command: " + string);
-                processCommand(string);
-            }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                debug("Error running tests");
-                printStackTrace(throwable);
-            }
-        }, new Action0() {
-            @Override
-            public void call() {
-                debug("Finished test run");
             }
         });
     }
@@ -151,7 +152,7 @@ public class TestServer {
             cmd = Command.valueOf(idx != -1 ? commandLine.substring(0, idx) : commandLine);
         } catch (IllegalArgumentException e) {
             error("Unrecognized command: " + commandLine);
-            stopped = true;
+            socketObservable.unsubscribeOn(Schedulers.immediate());
             return;
         }
 
@@ -169,7 +170,7 @@ public class TestServer {
             }
             break;
         case terminate:
-            stopped = true;
+            socketObservable.unsubscribeOn(Schedulers.immediate());
             break;
         }
     }
