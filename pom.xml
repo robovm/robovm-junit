@@ -53,11 +53,21 @@
         <artifactId>robovm-compiler</artifactId>
         <version>${robovm.version}</version>
       </dependency>
+        <dependency>
+            <groupId>org.robovm</groupId>
+            <artifactId>robovm-cocoatouch</artifactId>
+            <version>${robovm.version}</version>
+        </dependency>
       <dependency>
-        <groupId>com.netflix.rxjava</groupId>
-        <artifactId>rxjava-core</artifactId>
-        <version>0.18.4</version>
+        <groupId>io.reactivex</groupId>
+        <artifactId>rxjava</artifactId>
+        <version>1.0.9</version>
       </dependency>
+        <dependency>
+            <groupId>org.robovm</groupId>
+            <artifactId>robovm-maven-resolver</artifactId>
+            <version>${robovm.version}</version>
+        </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -114,8 +124,9 @@
 
   <modules>
     <module>protocol</module>
-    <module>client</module>
     <module>server</module>
+    <module>client</module>
+    <module>testkit</module>
   </modules>
 
 </project>

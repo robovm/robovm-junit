@@ -16,17 +16,6 @@
  */
 package org.robovm.junit.client;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
@@ -37,39 +26,46 @@ import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Config.Home;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.junit.protocol.Command;
-import org.robovm.junit.server.TestServer;
+import org.robovm.junit.protocol.ResultObject;
 import org.robovm.maven.resolver.RoboVMResolver;
+import rx.functions.Action1;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Tests {@link TestClient}.
  */
 public class TestClientTest {
 
+
     @Test
-    public void testSuccessfulWholeClassRunOutsideOfRoboVM() throws Exception {
-        final TestServer testServer = new TestServer();
-        PipedOutputStream cmdStream = new PipedOutputStream();
-        final PipedInputStream in = new PipedInputStream(cmdStream);
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Thread t = new Thread() {
-            public void run() {
-                testServer.run(in, out);
-            }
-        };
-        t.start();
+    public void testSuccessfulWholeClassRunWithCustomMain() throws Throwable {
+        TestClient client = new TestClient(org.robovm.junit.launcher.TestAppLauncher.class);
+        TestRunListener listener = new TestRunListener();
+        client.setRunListener(listener);
+        Config config = client.configure(createConfig()).build();
+        AppCompiler appCompiler = new AppCompiler(config);
+        appCompiler.compile();
 
-        OutputStreamWriter cmdWriter = new OutputStreamWriter(cmdStream);
-        cmdWriter.write(Command.run + " " + RunnerClass.class.getName() + "\n");
-        cmdWriter.flush();
-        cmdWriter.write(Command.terminate + "\n");
-        cmdWriter.flush();
+        LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
+        Process process = appCompiler.launchAsync(launchParameters);
+        client.runTests(RunnerClass.class.getName()).terminate();
 
-        t.join();
+        process.waitFor();
+        appCompiler.launchAsyncCleanup();
 
-        String result = new String(out.toByteArray(), "ASCII");
-        System.out.println(result);
-        assertFalse(result.isEmpty());
+        assertEquals("2 successful tests expected", 2, listener.successful.size());
+        assertTrue(listener.successful.contains("testSuccessfulTest1(" + RunnerClass.class.getName() + ")"));
+        assertTrue(listener.successful.contains("testSuccessfulTest2(" + RunnerClass.class.getName() + ")"));
+        assertEquals("1 failed test expected", 1, listener.failed.size());
+        assertTrue(listener.failed.contains("testShouldFail(" + RunnerClass.class.getName() + "): 1 == 2"));
     }
 
     @Test
