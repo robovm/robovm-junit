@@ -54,9 +54,9 @@
         <version>${robovm.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.netflix.rxjava</groupId>
-        <artifactId>rxjava-core</artifactId>
-        <version>0.18.4</version>
+        <groupId>io.reactivex</groupId>
+        <artifactId>rxjava</artifactId>
+        <version>1.0.9</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -16,17 +16,6 @@
  */
 package org.robovm.junit.client;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
@@ -37,40 +26,20 @@ import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Config.Home;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.junit.protocol.Command;
-import org.robovm.junit.server.TestServer;
 import org.robovm.maven.resolver.RoboVMResolver;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests {@link TestClient}.
  */
 public class TestClientTest {
-
-    @Test
-    public void testSuccessfulWholeClassRunOutsideOfRoboVM() throws Exception {
-        final TestServer testServer = new TestServer();
-        PipedOutputStream cmdStream = new PipedOutputStream();
-        final PipedInputStream in = new PipedInputStream(cmdStream);
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Thread t = new Thread() {
-            public void run() {
-                testServer.run(in, out);
-            }
-        };
-        t.start();
-
-        OutputStreamWriter cmdWriter = new OutputStreamWriter(cmdStream);
-        cmdWriter.write(Command.run + " " + RunnerClass.class.getName() + "\n");
-        cmdWriter.flush();
-        cmdWriter.write(Command.terminate + "\n");
-        cmdWriter.flush();
-
-        t.join();
-
-        String result = new String(out.toByteArray(), "ASCII");
-        System.out.println(result);
-        assertFalse(result.isEmpty());
-    }
 
     @Test
     public void testSuccessfulWholeClassRun() throws Throwable {

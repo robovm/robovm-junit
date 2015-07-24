@@ -69,7 +69,7 @@ public class TestClient extends LaunchPlugin {
     }
     private static class Terminator extends Waiter {}
     
-    public static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
+    public static String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
 
     private ServerPortReader serverPortReader;
     private File oldStdOutFifo;
@@ -79,6 +79,10 @@ public class TestClient extends LaunchPlugin {
     private RunListener runListener;
 
     public TestClient() {
+    }
+
+    public void setMainClass(Class mainClass) {
+        SERVER_CLASS_NAME = mainClass.getName();
     }
 
     public TestClient runTests(String ... testsToRun) {
