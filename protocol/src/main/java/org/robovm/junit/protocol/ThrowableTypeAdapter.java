@@ -19,6 +19,7 @@ package org.robovm.junit.protocol;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Type;
@@ -42,23 +43,25 @@ public class ThrowableTypeAdapter implements JsonSerializer<Throwable>, JsonDese
     public JsonElement serialize(Throwable throwable, Type type,
             JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
-        String throwableString = null;
+        String throwableString = serialize(throwable);
+        jsonObject.addProperty("throwableObject", throwableString);
+        return jsonObject;
+    }
 
+    private String serialize(Throwable throwable) {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
             outputStream.writeObject(throwable);
             outputStream.flush();
-            throwableString = new String(Base64Coder.encode(byteStream.toByteArray()));
+            return new String(Base64Coder.encode(byteStream.toByteArray()));
+        } catch (NotSerializableException e) {
+            return serialize(new UnserializableException(throwable));
         } catch (IOException e) {
             throw new Error(e);
         }
-
-        jsonObject.addProperty("throwableObject", throwableString);
-
-        return jsonObject;
     }
-
+    
     @Override
     public Throwable deserialize(JsonElement jsonElement, Type type,
             JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
