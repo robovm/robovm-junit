@@ -69,7 +69,7 @@ public class TestClient extends LaunchPlugin {
     }
     private static class Terminator extends Waiter {}
     
-    public static String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
+    public static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
 
     private ServerPortReader serverPortReader;
     private File oldStdOutFifo;
@@ -77,12 +77,13 @@ public class TestClient extends LaunchPlugin {
     private OutputStream defaultStdOutStream;
     private LinkedBlockingQueue<Object> runQueue = new LinkedBlockingQueue<>();
     private RunListener runListener;
+    private String mainClassName = SERVER_CLASS_NAME;
 
     public TestClient() {
     }
 
-    public void setMainClass(Class mainClass) {
-        SERVER_CLASS_NAME = mainClass.getName();
+    public void setMainClass(Class<?> mainClass) {
+        this.mainClassName = mainClass.getName();
     }
 
     public TestClient runTests(String ... testsToRun) {
@@ -241,7 +242,7 @@ public class TestClient extends LaunchPlugin {
             throw new IllegalArgumentException("RoboVM configuration cannot be null");
         }
 
-        configBuilder.mainClass(SERVER_CLASS_NAME);
+        configBuilder.mainClass(mainClassName);
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLProvider");
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLMessageDigestJDK**");
         
@@ -325,7 +326,8 @@ public class TestClient extends LaunchPlugin {
                         while (running && !isProcessStopped(process)) {
                             String line = in.readLine();
                             if (line != null) {
-                                if (line.startsWith(SERVER_CLASS_NAME + ": port=")) {
+                                if (line.startsWith(SERVER_CLASS_NAME + ": port=")
+                                        || line.startsWith(config.getMainClass() + ": port=")) {
                                     port = Integer.parseInt(line.split("=")[1]);
                                     config.getLogger().debug("Test server port: " + port);
                                 } else {
