@@ -15,15 +15,30 @@
     <dependency>
       <groupId>org.robovm</groupId>
       <artifactId>robovm-rt</artifactId>
-      <scope>provided</scope>
+    </dependency>
+    <dependency>
+    <groupId>org.robovm</groupId>
+    <artifactId>robovm-objc</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.robovm</groupId>
       <artifactId>robovm-junit-protocol</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.robovm</groupId>
       <artifactId>robovm-junit-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-compiler</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-maven-resolver</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
@@ -45,15 +60,16 @@
             </goals>
             <configuration>
               <shadedArtifactAttached>false</shadedArtifactAttached>
-              <relocations>
-                <relocation>
-                  <pattern>rx</pattern>
-                  <shadedPattern>org.robovm.junit.deps.rx</shadedPattern>
-                </relocation>
-              </relocations>
+              <artifactSet>
+                <includes>
+                  <include>junit:junit</include>
+                  <include>org.robovm:robovm-junit-server</include>
+                  <include>org.robovm:robovm-junit-protocol</include>
+                  <include>org.robovm:robovm-junit-client</include>
+                </includes>
+              </artifactSet>
               <filters>
                 <filter>
-                  <artifact>*:*</artifact>
                   <excludes>
                     <exclude>META-INF/NOTICE.txt</exclude>
                     <exclude>META-INF/*.SF</exclude>

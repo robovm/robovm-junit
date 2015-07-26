@@ -24,7 +24,6 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
@@ -178,7 +177,6 @@ public class AbstractJ4Runner extends BlockJUnit4ClassRunner {
 
         configBuilder.addClasspathEntry(roboVMResolver
                 .resolveArtifact("org.robovm:robovm-objc:" + Version.getVersion()).asFile());
-
         configBuilder.addClasspathEntry(new File(System.getProperty("user.dir") + File.separator + "target"
                 + File.separator + "classes"));
         configBuilder.addClasspathEntry(new File(System.getProperty("user.dir") + File.separator + "target"
