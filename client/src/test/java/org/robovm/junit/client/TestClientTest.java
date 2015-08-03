@@ -48,7 +48,7 @@ public class TestClientTest {
         client.setRunListener(listener);
         Config config = client.configure(createConfig()).build();
         AppCompiler appCompiler = new AppCompiler(config);
-        appCompiler.compile();
+        appCompiler.build();
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
         Process process = appCompiler.launchAsync(launchParameters);
@@ -70,7 +70,7 @@ public class TestClientTest {
         client.setRunListener(listener);
         Config config = client.configure(createConfig()).build();
         AppCompiler appCompiler = new AppCompiler(config);
-        appCompiler.compile();
+        appCompiler.build();
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
         Process process = appCompiler.launchAsync(launchParameters);
