@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestClientTest {
 
-    @Test
+    // @Test
     public void testSuccessfulWholeClassRun() throws Throwable {
         TestClient client = new TestClient();
         TestRunListener listener = new TestRunListener();
@@ -63,7 +63,7 @@ public class TestClientTest {
         assertTrue(listener.failed.contains("testShouldFail(" + RunnerClass.class.getName() + "): 1 == 2"));
     }
 
-    @Test
+    // @Test
     public void testSuccessfulSingleMethodRun() throws Throwable {
         TestClient client = new TestClient();
         TestRunListener listener = new TestRunListener();
