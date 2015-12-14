@@ -18,18 +18,24 @@ package org.robovm.junit.protocol;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import com.google.gson.JsonObject;
+
 public class GsonTest {
 
     @Test
-    public void testResultObjectSerialization() {
+    public void testResultObjectSerializationDeserialization() {
+        Exception thrownException = new RuntimeException(new IOException());
+
         ResultObject resultObject = new ResultObject();
-        Description description = Description.createSuiteDescription("test");
-        Description subDescription = Description.createSuiteDescription("test2");
+        Description description = Description.createSuiteDescription("Main description");
+        Description subDescription = Description.createSuiteDescription("Sub description");
 
         description.addChild(subDescription);
 
@@ -37,14 +43,60 @@ public class GsonTest {
         resultObject.setResult(new Result());
         resultObject.setDescription(description);
         resultObject.setFailure(
-                new Failure(Description.createSuiteDescription("test"), new RuntimeException()));
+                new Failure(Description.createSuiteDescription("test"), thrownException));
 
-        String jsonString = ResultObject.gson.toJson(resultObject);
-        assertTrue(jsonString != null);
+        JsonObject json = (JsonObject) ResultObject.gson.toJsonTree(resultObject);
 
-        ResultObject resultObject2 = ResultObject.gson.fromJson(jsonString, ResultObject.class);
+        assertEquals("Main description", json.get("description").getAsJsonObject().get("display_name").getAsString());
+        assertEquals("Sub description", json.get("description").getAsJsonObject().get("sub_description")
+                .getAsJsonArray().get(0).getAsJsonObject().get("display_name").getAsString());
 
-        assertTrue(resultObject2 != null);
+        ResultObject resultObject2 = ResultObject.gson.fromJson(json, ResultObject.class);
 
+        assertThrowablesEqual(thrownException, resultObject2.getFailure().getException(), false);
+    }
+
+    @Test
+    public void testNonDeserializableException() throws Exception {
+        NonDeserializableException e = new NonDeserializableException();
+        ResultObject resultObject = new ResultObject();
+        resultObject.setFailure(
+                new Failure(Description.createSuiteDescription("test"), e));
+
+        JsonObject json = (JsonObject) ResultObject.gson.toJsonTree(resultObject);
+        ResultObject resultObject2 = ResultObject.gson.fromJson(json, ResultObject.class);
+
+        assertThrowablesEqual(e, resultObject2.getFailure().getException(), true);
+    }
+    
+    private void assertThrowablesEqual(Throwable expected, Throwable actual, boolean undeserializable) {
+        if (!undeserializable) {
+            assertEquals(expected.getClass(), actual.getClass());
+            assertEquals(expected.getMessage(), actual.getMessage());
+        } else {
+            if (expected.getMessage() == null) {
+                assertEquals(expected.getClass().getName(), actual.getMessage());
+            } else {
+                assertEquals(expected.getMessage(), actual.getMessage());
+            }
+        }
+        
+        assertArrayEquals(expected.getStackTrace(), actual.getStackTrace());
+        
+        Throwable cause1 = expected.getCause();
+        Throwable cause2 = actual.getCause();
+        if (cause1 == null) {
+            assertNull(cause2);
+        } else {
+            assertNotNull(cause2);
+        }
+
+        if (cause1 != null) {
+            assertThrowablesEqual(cause1, cause2, undeserializable);
+        }
+    }
+    
+    @SuppressWarnings("serial")
+    public static class NonDeserializableException extends Exception {
     }
 }
