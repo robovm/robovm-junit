@@ -27,6 +27,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -78,12 +79,17 @@ public class TestClient extends LaunchPlugin {
     private LinkedBlockingQueue<Object> runQueue = new LinkedBlockingQueue<>();
     private RunListener runListener;
     private String mainClassName = SERVER_CLASS_NAME;
+    private List<String> runArgs = Collections.emptyList();
 
     public TestClient() {
     }
 
     public void setMainClass(Class<?> mainClass) {
         this.mainClassName = mainClass.getName();
+    }
+
+    public void setRunArgs(List<String> runArgs) {
+        this.runArgs = runArgs;
     }
 
     public TestClient runTests(String ... testsToRun) {
@@ -117,6 +123,8 @@ public class TestClient extends LaunchPlugin {
          * TestServer for more info.
          */
         parameters.getArguments().add("-rvm:Drobovm.launchedFromTestClient=true");
+
+        parameters.getArguments().addAll(runArgs);
         
         try {
             oldStdOutFifo = parameters.getStdoutFifo();
