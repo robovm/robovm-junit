@@ -27,13 +27,16 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.notification.RunListener;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.LaunchPlugin;
 import org.robovm.compiler.plugin.PluginArgument;
 import org.robovm.compiler.plugin.PluginArguments;
@@ -61,15 +64,19 @@ public class TestClient extends LaunchPlugin {
 
     private static class Waiter implements Runnable {
         CountDownLatch c = new CountDownLatch(1);
+
         public void run() {
             c.countDown();
         }
+
         public void await() throws InterruptedException {
             c.await();
         }
     }
+
     private static class Terminator extends Waiter {}
-    
+
+    public static final String SERVER_WRAPPER_CLASS_NAME = "org.robovm.objc.NonUICodeWrapper";
     public static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
 
     private ServerPortReader serverPortReader;
@@ -81,8 +88,7 @@ public class TestClient extends LaunchPlugin {
     private String mainClassName = SERVER_CLASS_NAME;
     private List<String> runArgs = Collections.emptyList();
 
-    public TestClient() {
-    }
+    public TestClient() {}
 
     public void setMainClass(Class<?> mainClass) {
         this.mainClassName = mainClass.getName();
@@ -92,7 +98,7 @@ public class TestClient extends LaunchPlugin {
         this.runArgs = runArgs;
     }
 
-    public TestClient runTests(String ... testsToRun) {
+    public TestClient runTests(String... testsToRun) {
         runQueue.addAll(Arrays.asList(testsToRun));
         return this;
     }
@@ -109,11 +115,11 @@ public class TestClient extends LaunchPlugin {
         w.await();
         return this;
     }
-    
+
     public void setRunListener(RunListener runListener) {
         this.runListener = runListener;
     }
-    
+
     @Override
     public void beforeLaunch(Config config, LaunchParameters parameters) {
         parameters.getArguments().add("-rvm:log=fatal");
@@ -125,7 +131,18 @@ public class TestClient extends LaunchPlugin {
         parameters.getArguments().add("-rvm:Drobovm.launchedFromTestClient=true");
 
         parameters.getArguments().addAll(runArgs);
-        
+
+        // we always use the NonUICodeWrapper to run the TestServer
+        // on iOS so the process watchdog is not triggered. The mainClass
+        // will be set to NonUICodeWrapper, which takes the actual test
+        // runner as an environment variable.
+        if (config.getOs() == OS.ios) {
+            Map<String, String> env = new HashMap<>(
+                    parameters.getEnvironment() == null ? new HashMap<String, String>() : parameters.getEnvironment());
+            env.put("robovm.wrappedClass", mainClassName);
+            parameters.setEnvironment(env);
+        }
+
         try {
             oldStdOutFifo = parameters.getStdoutFifo();
             newStdOutFifo = Fifos.mkfifo("junit-out-proxy");
@@ -139,9 +156,9 @@ public class TestClient extends LaunchPlugin {
     @Override
     public void afterLaunch(Config config, LaunchParameters parameters, Process process) {
         try {
-            serverPortReader = new ServerPortReader(config, parameters, process, 
+            serverPortReader = new ServerPortReader(config, parameters, process,
                     oldStdOutFifo, newStdOutFifo, defaultStdOutStream);
-            
+
             while (!serverPortReader.stopped && serverPortReader.port == -1) {
                 try {
                     Thread.sleep(10);
@@ -192,25 +209,24 @@ public class TestClient extends LaunchPlugin {
             }
         });
     }
-    
+
     @Override
     public void cleanup() {
         if (serverPortReader != null) {
             serverPortReader.running = false;
             serverPortReader.thread.interrupt();
-            serverPortReader = null;            
+            serverPortReader = null;
         }
     }
-    
+
     @Override
     public PluginArguments getArguments() {
-        return new PluginArguments("junit", Collections.<PluginArgument>emptyList());
+        return new PluginArguments("junit", Collections.<PluginArgument> emptyList());
     }
-    
+
     @Override
-    public void launchFailed(Config config, LaunchParameters parameters) {
-    }
-    
+    public void launchFailed(Config config, LaunchParameters parameters) {}
+
     private Observable<ResultObject> runTests(final Config config) {
         return Observable.create(new Observable.OnSubscribe<ResultObject>() {
             @Override
@@ -219,9 +235,10 @@ public class TestClient extends LaunchPlugin {
 
                 try {
                     if (config.getTarget() instanceof IOSTarget && IOSTarget.isDeviceArch(config.getArch())) {
-                        // iOS device launch. Use libimobiledevice to set up the connection.
+                        // iOS device launch. Use libimobiledevice to set up the
+                        // connection.
                         IDevice device = ((IOSTarget) config.getTarget()).getDevice();
-                        config.getLogger().debug("Connecting to test server running on port %d " 
+                        config.getLogger().debug("Connecting to test server running on port %d "
                                 + "on device with id %s", port, device.getUdid());
                         try (IDeviceConnection conn = device.connect(port)) {
                             config.getLogger().debug("Connected to test server on device %s", device.getUdid());
@@ -245,17 +262,22 @@ public class TestClient extends LaunchPlugin {
         });
     }
 
-    public Config.Builder configure(Config.Builder configBuilder) {
+    public Config.Builder configure(Config.Builder configBuilder, boolean isIOS) {
         if (configBuilder == null) {
             throw new IllegalArgumentException("RoboVM configuration cannot be null");
         }
 
-        configBuilder.mainClass(mainClassName);
+        configBuilder.addForceLinkClass("org.robovm.junit.server.TestServer");
+        if (isIOS) {
+            configBuilder.mainClass(SERVER_WRAPPER_CLASS_NAME);
+        } else {
+            configBuilder.mainClass(mainClassName);
+        }
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLProvider");
         configBuilder.addForceLinkClass("com.android.org.conscrypt.OpenSSLMessageDigestJDK**");
-        
+
         configBuilder.addLaunchPlugin(this);
-        
+
         return configBuilder;
     }
 
@@ -274,7 +296,7 @@ public class TestClient extends LaunchPlugin {
                     config.getLogger().debug("Running test %s", testToRun);
                     writer.write(Command.run + " " + testToRun + "\n");
                     writer.flush();
-      
+
                     while ((line = reader.readLine()) != null) {
                         ResultObject resultObject = ResultObject.fromJson(line);
                         if (!subscriber.isUnsubscribed()) {
@@ -291,7 +313,8 @@ public class TestClient extends LaunchPlugin {
                     ((Waiter) action).run();
                 }
             }
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException e) {
+        }
 
         config.getLogger().debug("Test run completed. Shutting down test server...");
 
@@ -313,10 +336,11 @@ public class TestClient extends LaunchPlugin {
         volatile boolean closeOutOnExit = true;
 
         public ServerPortReader(final Config config, final LaunchParameters params, final Process process,
-                final File oldStdOutFifo, final File newStdOutFifo, 
+                final File oldStdOutFifo, final File newStdOutFifo,
                 final OutputStream defaultStdOutStream) throws IOException {
 
-            final BufferedReader in = new BufferedReader(new InputStreamReader(new OpenOnReadFileInputStream(newStdOutFifo)));
+            final BufferedReader in = new BufferedReader(
+                    new InputStreamReader(new OpenOnReadFileInputStream(newStdOutFifo)));
             BufferedWriter writer = null;
             if (oldStdOutFifo != null) {
                 writer = new BufferedWriter(new OutputStreamWriter(new OpenOnWriteFileOutputStream(oldStdOutFifo)));

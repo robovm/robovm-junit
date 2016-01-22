@@ -46,7 +46,7 @@ public class TestClientTest {
         TestClient client = new TestClient();
         TestRunListener listener = new TestRunListener();
         client.setRunListener(listener);
-        Config config = client.configure(createConfig()).build();
+        Config config = client.configure(createConfig(), false).build();
         AppCompiler appCompiler = new AppCompiler(config);
         appCompiler.build();
 
@@ -68,7 +68,7 @@ public class TestClientTest {
         TestClient client = new TestClient();
         TestRunListener listener = new TestRunListener();
         client.setRunListener(listener);
-        Config config = client.configure(createConfig()).build();
+        Config config = client.configure(createConfig(), false).build();
         AppCompiler appCompiler = new AppCompiler(config);
         appCompiler.build();
 
