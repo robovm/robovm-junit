@@ -15,8 +15,7 @@
     <dependency>
       <groupId>org.robovm</groupId>
       <artifactId>robovm-rt</artifactId>
-      <version>${project.version}</version>
-      <type>pom</type>
+      <version>${project.version}</version>      
       <scope>provided</scope>
     </dependency>
     <dependency>
