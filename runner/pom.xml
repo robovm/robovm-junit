@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.robovm</groupId>
+    <artifactId>robovm-junit-parent</artifactId>
+    <version>1.5.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>robovm-junit-runner</artifactId>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-rt</artifactId>
+    </dependency>
+    <dependency>
+    <groupId>org.robovm</groupId>
+    <artifactId>robovm-objc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-junit-protocol</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-junit-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-compiler</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.robovm</groupId>
+      <artifactId>robovm-maven-resolver</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>false</shadedArtifactAttached>
+              <artifactSet>
+                <includes>
+                  <include>junit:junit</include>
+                  <include>org.robovm:robovm-junit-server</include>
+                  <include>org.robovm:robovm-junit-protocol</include>
+                  <include>org.robovm:robovm-junit-client</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <excludes>
+                    <exclude>META-INF/NOTICE.txt</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
